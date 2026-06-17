@@ -1,5 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil } from 'lucide-react';
+import { auth, googleProvider, db } from './firebase';
+import {
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+} from 'firebase/auth';
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  setDoc,
+  getDocs,
+} from 'firebase/firestore';
 
 const CATEGORIES = [
   { id: 'work', label: 'Работа', color: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-300' },
@@ -18,48 +34,98 @@ const PLANNER_COLORS = [
   { id: 'pink', label: 'Розовый', bg: 'bg-pink-500', light: 'bg-pink-100', text: 'text-pink-700' },
 ];
 
+// === LOGIN SCREEN ===
+const LoginScreen = () => {
+  const handleLogin = () => {
+    signInWithPopup(auth, googleProvider).catch(err => console.error('Login error:', err));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-2xl p-12 max-w-sm w-full mx-4 text-center">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <BookOpen size={48} className="text-blue-600" />
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">DayBook</h1>
+        <p className="text-gray-500 mb-8">Ваш личный ежедневник</p>
+        <button
+          onClick={handleLogin}
+          className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-lg flex items-center justify-center gap-3"
+        >
+          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+          Войти через Google
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const PlannerApp = () => {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [view, setView] = useState('home'); // 'home' или 'planner'
-  const [planners, setPlanners] = useState(() => {
-    const saved = localStorage.getItem('planners_list');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [planners, setPlanners] = useState([]);
   const [currentPlannerId, setCurrentPlannerId] = useState(null);
   const [newPlannerName, setNewPlannerName] = useState('');
   const [newPlannerColor, setNewPlannerColor] = useState('blue');
   const [showNewPlannerForm, setShowNewPlannerForm] = useState(false);
   const [editingPlanner, setEditingPlanner] = useState(null);
 
-  // Сохранение списка ежедневников
+  // Auth state listener
   useEffect(() => {
-    localStorage.setItem('planners_list', JSON.stringify(planners));
-  }, [planners]);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+      if (!u) {
+        setPlanners([]);
+        setView('home');
+        setCurrentPlannerId(null);
+      }
+    });
+    return unsubscribe;
+  }, []);
 
-  const createPlanner = () => {
-    if (!newPlannerName.trim()) return;
-    
-    const newPlanner = {
-      id: `planner-${Date.now()}`,
+  // Real-time planners sync
+  useEffect(() => {
+    if (!user) return;
+    const plannersRef = collection(db, 'users', user.uid, 'planners');
+    const unsubscribe = onSnapshot(plannersRef, (snapshot) => {
+      const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+      setPlanners(list);
+    });
+    return unsubscribe;
+  }, [user]);
+
+  const createPlanner = async () => {
+    if (!newPlannerName.trim() || !user) return;
+    const plannersRef = collection(db, 'users', user.uid, 'planners');
+    await addDoc(plannersRef, {
       name: newPlannerName.trim(),
       color: newPlannerColor,
       createdAt: new Date().toISOString(),
-    };
-
-    setPlanners([...planners, newPlanner]);
+    });
     setNewPlannerName('');
     setNewPlannerColor('blue');
     setShowNewPlannerForm(false);
   };
 
-  const updatePlanner = (id, name, color) => {
-    setPlanners(planners.map(p => p.id === id ? { ...p, name, color } : p));
+  const updatePlanner = async (id, name, color) => {
+    if (!user) return;
+    const plannerRef = doc(db, 'users', user.uid, 'planners', id);
+    await updateDoc(plannerRef, { name, color });
     setEditingPlanner(null);
   };
 
-  const deletePlanner = (id) => {
+  const deletePlanner = async (id) => {
+    if (!user) return;
     if (window.confirm('Вы уверены? Все задачи будут удалены.')) {
-      setPlanners(planners.filter(p => p.id !== id));
-      localStorage.removeItem(`planner_tasks_${id}`);
+      // Delete all task docs first
+      const tasksRef = collection(db, 'users', user.uid, 'planners', id, 'tasks');
+      const taskDocs = await getDocs(tasksRef);
+      await Promise.all(taskDocs.docs.map(d => deleteDoc(d.ref)));
+      // Delete planner doc
+      await deleteDoc(doc(db, 'users', user.uid, 'planners', id));
       if (currentPlannerId === id) {
         setCurrentPlannerId(null);
         setView('home');
@@ -81,6 +147,22 @@ const PlannerApp = () => {
     return planners.find(p => p.id === currentPlannerId);
   };
 
+  const handleSignOut = () => {
+    signOut(auth).catch(err => console.error('Sign out error:', err));
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="text-gray-500 text-xl">Загрузка...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       {view === 'home' ? (
@@ -98,6 +180,8 @@ const PlannerApp = () => {
           newPlannerColor={newPlannerColor}
           setNewPlannerColor={setNewPlannerColor}
           onCreatePlanner={createPlanner}
+          user={user}
+          onSignOut={handleSignOut}
         />
       ) : (
         <PlannerView
@@ -108,6 +192,8 @@ const PlannerApp = () => {
           onSelectPlanner={setCurrentPlannerId}
           onBack={goBack}
           onNewPlanner={() => { goBack(); setShowNewPlannerForm(true); }}
+          user={user}
+          onSignOut={handleSignOut}
         />
       )}
     </div>
@@ -129,6 +215,8 @@ const HomeView = ({
   newPlannerColor,
   setNewPlannerColor,
   onCreatePlanner,
+  user,
+  onSignOut,
 }) => {
   const colorInfo = PLANNER_COLORS.find(c => c.id === newPlannerColor);
   const [editName, setEditName] = useState('');
@@ -196,12 +284,23 @@ const HomeView = ({
             </div>
           </div>
         )}
-        
+
         {/* Заголовок */}
         <div className="mb-12">
-          <div className="flex items-center gap-3 mb-3">
-            <BookOpen size={40} className="text-blue-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Мои ежедневники</h1>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <BookOpen size={40} className="text-blue-600" />
+              <h1 className="text-4xl font-bold text-gray-900">Мои ежедневники</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">{user.displayName || user.email}</span>
+              <button
+                onClick={onSignOut}
+                className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              >
+                Выйти
+              </button>
+            </div>
           </div>
           <p className="text-gray-600 text-lg">Создавайте и управляйте своими ежедневниками для разных проектов и целей</p>
         </div>
@@ -210,7 +309,7 @@ const HomeView = ({
         {showNewPlannerForm ? (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Новый ежедневник</h2>
-            
+
             <div className="space-y-6">
               {/* Название */}
               <div>
@@ -296,7 +395,7 @@ const HomeView = ({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {planners.map(planner => {
-              const colorInfo = PLANNER_COLORS.find(c => c.id === planner.color);
+              const pColorInfo = PLANNER_COLORS.find(c => c.id === planner.color);
               return (
                 <div
                   key={planner.id}
@@ -304,13 +403,13 @@ const HomeView = ({
                   onClick={() => onOpenPlanner(planner)}
                 >
                   {/* Цветная полоса сверху */}
-                  <div className={`h-3 ${colorInfo.bg}`}></div>
+                  <div className={`h-3 ${pColorInfo.bg}`}></div>
 
                   <div className="p-6">
                     {/* Иконка и название */}
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`p-3 rounded-lg ${colorInfo.light}`}>
-                        <BookOpen className={`${colorInfo.text}`} size={24} />
+                      <div className={`p-3 rounded-lg ${pColorInfo.light}`}>
+                        <BookOpen className={`${pColorInfo.text}`} size={24} />
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
@@ -341,7 +440,7 @@ const HomeView = ({
                     </p>
 
                     {/* Кнопка открытия */}
-                    <button className={`w-full py-2.5 ${colorInfo.bg} text-white font-semibold rounded-lg hover:opacity-90 transition-opacity`}>
+                    <button className={`w-full py-2.5 ${pColorInfo.bg} text-white font-semibold rounded-lg hover:opacity-90 transition-opacity`}>
                       Открыть →
                     </button>
                   </div>
@@ -356,13 +455,10 @@ const HomeView = ({
 };
 
 // === PLANNER VIEW (Сам планер) ===
-const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectPlanner, onBack, onNewPlanner }) => {
+const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectPlanner, onBack, onNewPlanner, user, onSignOut }) => {
   const [view, setView] = useState('day');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem(`planner_tasks_${plannerId}`);
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [tasks, setTasks] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const [editingCategory, setEditingCategory] = useState('work');
@@ -372,12 +468,42 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [showSearch, setShowSearch] = useState(false);
   const [showPlannerDropdown, setShowPlannerDropdown] = useState(false);
 
+  const debounceTimers = useRef({});
+
+  // Load all tasks for this planner from Firestore on mount / plannerId change
   useEffect(() => {
-    const timer = setTimeout(() => {
-      localStorage.setItem(`planner_tasks_${plannerId}`, JSON.stringify(tasks));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [tasks, plannerId]);
+    if (!user || !plannerId) return;
+    setTasks({});
+    const tasksRef = collection(db, 'users', user.uid, 'planners', plannerId, 'tasks');
+    getDocs(tasksRef).then(snapshot => {
+      const loaded = {};
+      snapshot.docs.forEach(d => {
+        loaded[d.id] = d.data().tasks || [];
+      });
+      setTasks(loaded);
+    }).catch(err => console.error('Error loading tasks:', err));
+  }, [user, plannerId]);
+
+  // Save tasks to Firestore with debounce when tasks change
+  useEffect(() => {
+    if (!user || !plannerId) return;
+
+    // For each date key in tasks, debounce save
+    Object.keys(tasks).forEach(dateStr => {
+      if (debounceTimers.current[dateStr]) {
+        clearTimeout(debounceTimers.current[dateStr]);
+      }
+      debounceTimers.current[dateStr] = setTimeout(() => {
+        const taskDocRef = doc(db, 'users', user.uid, 'planners', plannerId, 'tasks', dateStr);
+        const dateTasks = tasks[dateStr];
+        if (dateTasks && dateTasks.length > 0) {
+          setDoc(taskDocRef, { tasks: dateTasks }).catch(err => console.error('Error saving tasks:', err));
+        } else {
+          deleteDoc(taskDocRef).catch(err => console.error('Error deleting task doc:', err));
+        }
+      }, 500);
+    });
+  }, [tasks, user, plannerId]);
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -471,13 +597,13 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     const emptyLines = Math.max(0, 15 - dayTasks.length);
 
     return (
-      <div className="mx-auto bg-white shadow-2xl border border-gray-300 min-h-[800px] rounded-lg relative overflow-hidden" 
+      <div className="mx-auto bg-white shadow-2xl border border-gray-300 min-h-[800px] rounded-lg relative overflow-hidden"
            style={{ maxWidth: '1400px' }}>
-        
+
         <div className="p-8 flex justify-between items-start bg-slate-50 border-b border-gray-200">
           <div className="flex gap-4">
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowCategoryFilter(!showCategoryFilter)}
                 className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -487,7 +613,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                 <div className="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-10 min-w-[200px]">
                   {CATEGORIES.map(cat => (
                     <label key={cat.id} className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 px-2 rounded">
-                      <input 
+                      <input
                         type="checkbox"
                         checked={selectedCategories.has(cat.id)}
                         onChange={(e) => {
@@ -511,14 +637,14 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             </div>
 
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowSearch(!showSearch)}
                 className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 🔍 Поиск
               </button>
               {showSearch && (
-                <input 
+                <input
                   type="text"
                   placeholder="Найти задачу..."
                   value={searchQuery}
@@ -545,7 +671,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               return (
                 <div key={task.id} className="group flex items-center h-12 border-b border-blue-100 hover:bg-blue-50 px-20 text-xl text-gray-700 font-medium italic relative">
                   <span className="mr-4 text-gray-300 text-sm">{i + 1}.</span>
-                  
+
                   {isEditing ? (
                     <div
                       className="flex items-center flex-grow"
@@ -607,7 +733,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
             <div className="flex items-center h-12 border-b border-blue-100 px-20 focus-within:bg-amber-50">
               <span className="mr-4 text-gray-300 text-sm">{dayTasks.length + 1}.</span>
-              <input 
+              <input
                 className="w-full bg-transparent border-none outline-none text-xl text-black placeholder-gray-300 italic"
                 placeholder="Напишите задачу и нажмите Enter..."
                 onKeyDown={(e) => {
@@ -644,10 +770,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           const isToday = dStr === formatDate(new Date());
           const allDayTasks = tasks[dStr] || [];
           const dayTasks = getFilteredTasks(allDayTasks);
-          
+
           return (
-            <div 
-              key={i} 
+            <div
+              key={i}
               onClick={() => { setCurrentDate(d); setView('day'); }}
               className={`border-2 rounded-xl p-4 bg-white hover:border-blue-400 cursor-pointer transition-all shadow-sm ${isToday ? 'border-blue-500' : 'border-transparent'}`}
             >
@@ -695,7 +821,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             const dayTasks = getFilteredTasks(allDayTasks);
 
             return (
-              <div 
+              <div
                 key={i}
                 onClick={() => isValidDay && (setCurrentDate(dayDate), setView('day'))}
                 className={`h-32 border-b border-r p-2 transition-colors ${isValidDay ? 'cursor-pointer hover:bg-blue-50' : 'bg-gray-50'}`}
@@ -729,48 +855,60 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 text-gray-900 font-sans">
       <div className="max-w-[1400px] mx-auto">
-        
+
         {/* Верхняя панель с выбором ежедневника */}
-        <div className="mb-8 flex justify-end relative">
-          <button
-            onClick={() => setShowPlannerDropdown(v => !v)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 text-base min-w-[220px] justify-between"
-          >
-            <span className="flex items-center gap-2">
-              <BookOpen size={16} className="text-gray-400" />
-              {planners.find(p => p.id === currentPlannerId)?.name || 'Ежедневник'}
-            </span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-gray-400 transition-transform ${showPlannerDropdown ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-          {showPlannerDropdown && (
-            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[220px] py-1" onMouseLeave={() => setShowPlannerDropdown(false)}>
-              {planners.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => { onSelectPlanner(p.id); setShowPlannerDropdown(false); }}
-                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${p.id === currentPlannerId ? 'font-semibold text-blue-600' : 'text-gray-700'}`}
-                >
-                  {p.id === currentPlannerId && <span className="mr-2">✓</span>}{p.name}
-                </button>
-              ))}
-              <div className="border-t border-gray-100 mt-1 pt-1">
-                <button
-                  onClick={() => { onBack(); setShowPlannerDropdown(false); }}
-                  className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  ← Все ежедневники
-                </button>
-                <button
-                  onClick={() => { onNewPlanner(); setShowPlannerDropdown(false); }}
-                  className="w-full text-left px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors font-medium"
-                >
-                  ＋ Создать новый
-                </button>
+        <div className="mb-8 flex justify-between items-center relative">
+          <div className="relative">
+            <button
+              onClick={() => setShowPlannerDropdown(v => !v)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 text-base min-w-[220px] justify-between"
+            >
+              <span className="flex items-center gap-2">
+                <BookOpen size={16} className="text-gray-400" />
+                {planners.find(p => p.id === currentPlannerId)?.name || 'Ежедневник'}
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-gray-400 transition-transform ${showPlannerDropdown ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            {showPlannerDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[220px] py-1" onMouseLeave={() => setShowPlannerDropdown(false)}>
+                {planners.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => { onSelectPlanner(p.id); setShowPlannerDropdown(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${p.id === currentPlannerId ? 'font-semibold text-blue-600' : 'text-gray-700'}`}
+                  >
+                    {p.id === currentPlannerId && <span className="mr-2">✓</span>}{p.name}
+                  </button>
+                ))}
+                <div className="border-t border-gray-100 mt-1 pt-1">
+                  <button
+                    onClick={() => { onBack(); setShowPlannerDropdown(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    ← Все ежедневники
+                  </button>
+                  <button
+                    onClick={() => { onNewPlanner(); setShowPlannerDropdown(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors font-medium"
+                  >
+                    ＋ Создать новый
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">{user.displayName || user.email}</span>
+            <button
+              onClick={onSignOut}
+              className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm"
+            >
+              Выйти
+            </button>
+          </div>
         </div>
-        
+
         {/* Панель управления */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
           <div className="inline-flex bg-white p-1 rounded-xl shadow-md border border-gray-100">
@@ -794,7 +932,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               <ChevronLeft size={28} className="text-blue-600" />
             </button>
             <span className="text-xl font-bold min-w-[200px] text-center text-gray-700">
-              {view === 'day' 
+              {view === 'day'
                 ? currentDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
                 : currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
               }
