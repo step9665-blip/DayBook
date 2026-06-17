@@ -230,7 +230,7 @@ const HomeView = ({
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
 
         {/* Модальное окно редактирования */}
@@ -286,14 +286,14 @@ const HomeView = ({
         )}
 
         {/* Заголовок */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-3">
+        <div className="mb-6 sm:mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
               <BookOpen size={40} className="text-blue-600" />
-              <h1 className="text-4xl font-bold text-gray-900">Мои ежедневники</h1>
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">Мои ежедневники</h1>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500">{user.displayName || user.email}</span>
+            <div className="flex items-center gap-3 self-end sm:self-auto">
+              <span className="text-sm text-gray-500 hidden sm:inline">{user.displayName || user.email}</span>
               <button
                 onClick={onSignOut}
                 className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm"
@@ -302,7 +302,7 @@ const HomeView = ({
               </button>
             </div>
           </div>
-          <p className="text-gray-600 text-lg">Создавайте и управляйте своими ежедневниками для разных проектов и целей</p>
+          <p className="text-gray-600 text-base sm:text-lg">Создавайте и управляйте своими ежедневниками для разных проектов и целей</p>
         </div>
 
         {/* Форма создания нового ежедневника */}
@@ -600,7 +600,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       <div className="mx-auto bg-white shadow-2xl border border-gray-300 min-h-[800px] rounded-lg relative overflow-hidden"
            style={{ maxWidth: '1400px' }}>
 
-        <div className="p-8 flex justify-between items-start bg-slate-50 border-b border-gray-200">
+        <div className="p-4 sm:p-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 bg-slate-50 border-b border-gray-200">
           <div className="flex gap-4">
             <div className="relative">
               <button
@@ -656,9 +656,9 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             </div>
           </div>
 
-          <div className="text-right">
-            <h2 className="text-3xl font-serif font-bold text-gray-800 capitalize">{weekday}</h2>
-            <p className="text-xl text-gray-500 font-serif">{dayNum}</p>
+          <div className="text-left sm:text-right">
+            <h2 className="text-xl sm:text-3xl font-serif font-bold text-gray-800 capitalize">{weekday}</h2>
+            <p className="text-base sm:text-xl text-gray-500 font-serif">{dayNum}</p>
           </div>
         </div>
 
@@ -669,7 +669,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               const isEditing = editingId === task.id;
 
               return (
-                <div key={task.id} className="group flex items-center h-12 border-b border-blue-100 hover:bg-blue-50 px-20 text-xl text-gray-700 font-medium italic relative">
+                <div key={task.id} className="group flex items-center h-12 border-b border-blue-100 hover:bg-blue-50 px-3 sm:px-10 md:px-20 text-base sm:text-xl text-gray-700 font-medium italic relative">
                   <span className="mr-4 text-gray-300 text-sm">{i + 1}.</span>
 
                   {isEditing ? (
@@ -731,10 +731,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               );
             })}
 
-            <div className="flex items-center h-12 border-b border-blue-100 px-20 focus-within:bg-amber-50">
+            <div className="flex items-center h-12 border-b border-blue-100 px-3 sm:px-10 md:px-20 focus-within:bg-amber-50">
               <span className="mr-4 text-gray-300 text-sm">{dayTasks.length + 1}.</span>
               <input
-                className="w-full bg-transparent border-none outline-none text-xl text-black placeholder-gray-300 italic"
+                className="w-full bg-transparent border-none outline-none text-base sm:text-xl text-black placeholder-gray-300 italic"
                 placeholder="Напишите задачу и нажмите Enter..."
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -762,7 +762,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     startOfWeek.setDate(diff);
 
     return (
-      <div className="grid grid-cols-7 gap-4 min-h-[500px]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-4 min-h-[300px] sm:min-h-[500px]">
         {[...Array(7)].map((_, i) => {
           const d = new Date(startOfWeek);
           d.setDate(startOfWeek.getDate() + i);
@@ -775,9 +775,9 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             <div
               key={i}
               onClick={() => { setCurrentDate(d); setView('day'); }}
-              className={`border-2 rounded-xl p-4 bg-white hover:border-blue-400 cursor-pointer transition-all shadow-sm ${isToday ? 'border-blue-500' : 'border-transparent'}`}
+              className={`border-2 rounded-xl p-2 sm:p-4 bg-white hover:border-blue-400 cursor-pointer transition-all shadow-sm ${isToday ? 'border-blue-500' : 'border-transparent'}`}
             >
-              <div className={`text-sm font-bold mb-3 pb-2 border-b ${isToday ? 'text-blue-600' : 'text-gray-400'}`}>
+              <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 pb-1 sm:pb-2 border-b ${isToday ? 'text-blue-600' : 'text-gray-400'}`}>
                 {d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })}
               </div>
               <div className="space-y-2">
@@ -808,7 +808,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-7 bg-gray-100 border-b">
           {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(d => (
-            <div key={d} className="py-3 text-center text-xs font-bold text-gray-500 uppercase">{d}</div>
+            <div key={d} className="py-1 sm:py-3 text-center text-[10px] sm:text-xs font-bold text-gray-500 uppercase">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -824,23 +824,24 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               <div
                 key={i}
                 onClick={() => isValidDay && (setCurrentDate(dayDate), setView('day'))}
-                className={`h-32 border-b border-r p-2 transition-colors ${isValidDay ? 'cursor-pointer hover:bg-blue-50' : 'bg-gray-50'}`}
+                className={`h-16 sm:h-28 md:h-32 border-b border-r p-1 sm:p-2 transition-colors ${isValidDay ? 'cursor-pointer hover:bg-blue-50' : 'bg-gray-50'}`}
               >
                 {isValidDay && (
                   <>
-                    <span className={`inline-block w-7 h-7 text-center leading-7 rounded-full text-sm font-bold ${dStr === formatDate(new Date()) ? 'bg-blue-500 text-white' : 'text-gray-700'}`}>
+                    <span className={`inline-block w-5 h-5 sm:w-7 sm:h-7 text-center leading-5 sm:leading-7 rounded-full text-xs sm:text-sm font-bold ${dStr === formatDate(new Date()) ? 'bg-blue-500 text-white' : 'text-gray-700'}`}>
                       {dayNum}
                     </span>
                     <div className="mt-2 space-y-1">
                       {dayTasks.slice(0, 3).map((t, idx) => {
                         const catInfo = getCategoryInfo(t.category);
                         return (
-                          <div key={idx} className={`text-[10px] px-1 rounded truncate ${catInfo.color} ${catInfo.textColor} ${t.completed ? 'line-through opacity-60' : ''}`}>
+                          <div key={idx} className={`hidden sm:block text-[10px] px-1 rounded truncate ${catInfo.color} ${catInfo.textColor} ${t.completed ? 'line-through opacity-60' : ''}`}>
                             {t.text}
                           </div>
                         );
                       })}
-                      {dayTasks.length > 3 && <div className="text-[10px] text-gray-400 pl-1">+{dayTasks.length - 3}</div>}
+                      {dayTasks.length > 3 && <div className="hidden sm:block text-[10px] text-gray-400 pl-1">+{dayTasks.length - 3}</div>}
+                      {dayTasks.length > 0 && <div className="sm:hidden text-[10px] text-blue-400 font-bold text-center">{dayTasks.length}</div>}
                     </div>
                   </>
                 )}
@@ -853,15 +854,15 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6 text-gray-900 font-sans">
+    <div className="min-h-screen bg-[#f8fafc] p-2 sm:p-6 text-gray-900 font-sans">
       <div className="max-w-[1400px] mx-auto">
 
         {/* Верхняя панель с выбором ежедневника */}
-        <div className="mb-8 flex justify-between items-center relative">
+        <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 relative">
           <div className="relative">
             <button
               onClick={() => setShowPlannerDropdown(v => !v)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 text-base min-w-[220px] justify-between"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 text-base w-full sm:min-w-[220px] sm:w-auto justify-between"
             >
               <span className="flex items-center gap-2">
                 <BookOpen size={16} className="text-gray-400" />
@@ -898,8 +899,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">{user.displayName || user.email}</span>
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <span className="text-sm text-gray-500 hidden sm:inline">{user.displayName || user.email}</span>
             <button
               onClick={onSignOut}
               className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors text-sm"
@@ -910,7 +911,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         {/* Панель управления */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-10 gap-4 sm:gap-6">
           <div className="inline-flex bg-white p-1 rounded-xl shadow-md border border-gray-100">
             {[
               { id: 'day', label: 'День' },
@@ -920,18 +921,18 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               <button
                 key={btn.id}
                 onClick={() => setView(btn.id)}
-                className={`px-8 py-2.5 rounded-lg font-medium transition-all ${view === btn.id ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-blue-600'}`}
+                className={`px-4 sm:px-8 py-2 sm:py-2.5 rounded-lg font-medium transition-all ${view === btn.id ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-blue-600'}`}
               >
                 {btn.label}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-6 bg-white px-6 py-3 rounded-xl shadow-md border border-gray-100">
+          <div className="flex items-center gap-3 sm:gap-6 bg-white px-3 sm:px-6 py-2 sm:py-3 rounded-xl shadow-md border border-gray-100">
             <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <ChevronLeft size={28} className="text-blue-600" />
             </button>
-            <span className="text-xl font-bold min-w-[200px] text-center text-gray-700">
+            <span className="text-base sm:text-xl font-bold min-w-[140px] sm:min-w-[200px] text-center text-gray-700">
               {view === 'day'
                 ? currentDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
                 : currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
