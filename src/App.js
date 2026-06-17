@@ -91,13 +91,14 @@ const PlannerApp = () => {
           onCreatePlanner={createPlanner}
         />
       ) : (
-        <PlannerView 
+        <PlannerView
           planner={getCurrentPlanner()}
           plannerId={currentPlannerId}
           planners={planners}
           currentPlannerId={currentPlannerId}
           onSelectPlanner={setCurrentPlannerId}
           onBack={goBack}
+          onNewPlanner={() => { goBack(); setShowNewPlannerForm(true); }}
         />
       )}
     </div>
@@ -274,7 +275,7 @@ const HomeView = ({
 };
 
 // === PLANNER VIEW (Сам планер) ===
-const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectPlanner, onBack }) => {
+const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectPlanner, onBack, onNewPlanner }) => {
   const [view, setView] = useState('day');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tasks, setTasks] = useState(() => {
@@ -653,26 +654,24 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     <div className="min-h-screen bg-[#f8fafc] p-6 text-gray-900 font-sans">
       <div className="max-w-[1400px] mx-auto">
         
-        {/* Верхняя панель с возвратом и выбором ежедневника */}
-        <div className="mb-8 flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700"
-          >
-            <ArrowLeft size={20} />
-            Вернуться к ежедневникам
-          </button>
-
-          {/* Выпадающий список для выбора ежедневника */}
+        {/* Верхняя панель с выбором ежедневника */}
+        <div className="mb-8 flex justify-end">
           <select
             value={currentPlannerId || ''}
-            onChange={(e) => onSelectPlanner(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value === '__back__') onBack();
+              else if (e.target.value === '__new__') onNewPlanner();
+              else onSelectPlanner(e.target.value);
+            }}
             className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 text-base cursor-pointer"
           >
             <option value="" disabled>Выберите ежедневник</option>
             {planners.map(p => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
+            <option disabled>──────────────</option>
+            <option value="__back__">← Все ежедневники</option>
+            <option value="__new__">＋ Создать новый</option>
           </select>
         </div>
         
