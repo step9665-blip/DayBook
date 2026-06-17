@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Edit2, Check, X, Plus, BookOpen, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Edit2, Check, X, Plus, BookOpen } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'work', label: 'Работа', color: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-300' },
