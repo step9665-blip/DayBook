@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Edit2, Check, X, Plus, BookOpen, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'work', label: 'Работа', color: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-300' },
@@ -370,6 +370,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [selectedCategories, setSelectedCategories] = useState(new Set(CATEGORIES.map(c => c.id)));
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showPlannerDropdown, setShowPlannerDropdown] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -546,8 +547,15 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                   <span className="mr-4 text-gray-300 text-sm">{i + 1}.</span>
                   
                   {isEditing ? (
-                    <>
-                      <select 
+                    <div
+                      className="flex items-center flex-grow"
+                      onBlur={(e) => {
+                        if (!e.currentTarget.contains(e.relatedTarget)) {
+                          finishEdit(formatDate(currentDate), task.id);
+                        }
+                      }}
+                    >
+                      <select
                         value={editingCategory}
                         onChange={(e) => setEditingCategory(e.target.value)}
                         className="mr-2 px-2 py-1 text-xs border border-gray-300 rounded bg-white"
@@ -556,29 +564,21 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                           <option key={cat.id} value={cat.id}>{cat.label}</option>
                         ))}
                       </select>
-                      <input 
+                      <input
                         type="text"
                         value={editingText}
                         onChange={(e) => setEditingText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') finishEdit(formatDate(currentDate), task.id);
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
                         className="flex-grow bg-white border border-blue-400 px-2 py-1 text-base rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                         autoFocus
                       />
-                      <button 
-                        onClick={() => finishEdit(formatDate(currentDate), task.id)}
-                        className="ml-2 p-1 text-green-600 hover:bg-green-100 rounded"
-                      >
-                        <Check size={18} />
-                      </button>
-                      <button 
-                        onClick={() => setEditingId(null)}
-                        className="ml-1 p-1 text-gray-400 hover:bg-gray-200 rounded"
-                      >
-                        <X size={18} />
-                      </button>
-                    </>
+                    </div>
                   ) : (
                     <>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={task.completed}
                         onChange={() => toggleTaskCompletion(formatDate(currentDate), task.id)}
@@ -587,23 +587,18 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                       <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded mr-3 ${catInfo.color} ${catInfo.textColor}`}>
                         {catInfo.label}
                       </span>
-                      <span className={`flex-grow ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                      <span
+                        onClick={() => startEdit(task)}
+                        className={`flex-grow cursor-text ${task.completed ? 'line-through text-gray-400' : ''}`}
+                      >
                         {task.text}
                       </span>
-                      <div className="opacity-0 group-hover:opacity-100 flex gap-2 ml-4 transition-opacity">
-                        <button 
-                          onClick={() => startEdit(task)}
-                          className="text-blue-400 hover:bg-blue-100 p-1 rounded"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button 
-                          onClick={() => deleteTask(formatDate(currentDate), task.id)}
-                          className="text-red-400 hover:bg-red-100 p-1 rounded"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => deleteTask(formatDate(currentDate), task.id)}
+                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:bg-red-100 p-1 rounded transition-opacity ml-4"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </>
                   )}
                 </div>
@@ -736,24 +731,44 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       <div className="max-w-[1400px] mx-auto">
         
         {/* Верхняя панель с выбором ежедневника */}
-        <div className="mb-8 flex justify-end">
-          <select
-            value={currentPlannerId || ''}
-            onChange={(e) => {
-              if (e.target.value === '__back__') onBack();
-              else if (e.target.value === '__new__') onNewPlanner();
-              else onSelectPlanner(e.target.value);
-            }}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 text-base cursor-pointer"
+        <div className="mb-8 flex justify-end relative">
+          <button
+            onClick={() => setShowPlannerDropdown(v => !v)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700 text-base min-w-[220px] justify-between"
           >
-            <option value="" disabled>Выберите ежедневник</option>
-            {planners.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-            <option disabled>──────────────</option>
-            <option value="__back__">← Все ежедневники</option>
-            <option value="__new__">＋ Создать новый</option>
-          </select>
+            <span className="flex items-center gap-2">
+              <BookOpen size={16} className="text-gray-400" />
+              {planners.find(p => p.id === currentPlannerId)?.name || 'Ежедневник'}
+            </span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-gray-400 transition-transform ${showPlannerDropdown ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          {showPlannerDropdown && (
+            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[220px] py-1" onMouseLeave={() => setShowPlannerDropdown(false)}>
+              {planners.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => { onSelectPlanner(p.id); setShowPlannerDropdown(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors ${p.id === currentPlannerId ? 'font-semibold text-blue-600' : 'text-gray-700'}`}
+                >
+                  {p.id === currentPlannerId && <span className="mr-2">✓</span>}{p.name}
+                </button>
+              ))}
+              <div className="border-t border-gray-100 mt-1 pt-1">
+                <button
+                  onClick={() => { onBack(); setShowPlannerDropdown(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  ← Все ежедневники
+                </button>
+                <button
+                  onClick={() => { onNewPlanner(); setShowPlannerDropdown(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors font-medium"
+                >
+                  ＋ Создать новый
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Панель управления */}
