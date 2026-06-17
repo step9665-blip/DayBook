@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Edit2, Check, X, Plus, BookOpen } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Edit2, Check, X, Plus, BookOpen, Pencil } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'work', label: 'Работа', color: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-300' },
@@ -28,6 +28,7 @@ const PlannerApp = () => {
   const [newPlannerName, setNewPlannerName] = useState('');
   const [newPlannerColor, setNewPlannerColor] = useState('blue');
   const [showNewPlannerForm, setShowNewPlannerForm] = useState(false);
+  const [editingPlanner, setEditingPlanner] = useState(null);
 
   // Сохранение списка ежедневников
   useEffect(() => {
@@ -48,6 +49,11 @@ const PlannerApp = () => {
     setNewPlannerName('');
     setNewPlannerColor('blue');
     setShowNewPlannerForm(false);
+  };
+
+  const updatePlanner = (id, name, color) => {
+    setPlanners(planners.map(p => p.id === id ? { ...p, name, color } : p));
+    setEditingPlanner(null);
   };
 
   const deletePlanner = (id) => {
@@ -78,10 +84,13 @@ const PlannerApp = () => {
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       {view === 'home' ? (
-        <HomeView 
+        <HomeView
           planners={planners}
           onOpenPlanner={openPlanner}
           onDeletePlanner={deletePlanner}
+          onUpdatePlanner={updatePlanner}
+          editingPlanner={editingPlanner}
+          setEditingPlanner={setEditingPlanner}
           showNewPlannerForm={showNewPlannerForm}
           setShowNewPlannerForm={setShowNewPlannerForm}
           newPlannerName={newPlannerName}
@@ -110,6 +119,9 @@ const HomeView = ({
   planners,
   onOpenPlanner,
   onDeletePlanner,
+  onUpdatePlanner,
+  editingPlanner,
+  setEditingPlanner,
   showNewPlannerForm,
   setShowNewPlannerForm,
   newPlannerName,
@@ -119,10 +131,71 @@ const HomeView = ({
   onCreatePlanner,
 }) => {
   const colorInfo = PLANNER_COLORS.find(c => c.id === newPlannerColor);
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState('blue');
+
+  const openEdit = (e, planner) => {
+    e.stopPropagation();
+    setEditName(planner.name);
+    setEditColor(planner.color);
+    setEditingPlanner(planner);
+  };
 
   return (
     <div className="p-8">
       <div className="max-w-6xl mx-auto">
+
+        {/* Модальное окно редактирования */}
+        {editingPlanner && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Редактировать ежедневник</h2>
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Название</label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                    autoFocus
+                    onKeyDown={(e) => e.key === 'Enter' && onUpdatePlanner(editingPlanner.id, editName, editColor)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Цвет</label>
+                  <div className="flex gap-3 flex-wrap">
+                    {PLANNER_COLORS.map(color => (
+                      <button
+                        key={color.id}
+                        onClick={() => setEditColor(color.id)}
+                        className={`w-10 h-10 rounded-full transition-transform ${color.bg} ${
+                          editColor === color.id ? 'ring-4 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-105'
+                        }`}
+                        title={color.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => onUpdatePlanner(editingPlanner.id, editName, editColor)}
+                    className={`flex-1 px-5 py-3 ${PLANNER_COLORS.find(c => c.id === editColor).bg} text-white font-bold rounded-lg hover:opacity-90 transition-opacity`}
+                  >
+                    <Check size={18} className="inline mr-2" />
+                    Сохранить
+                  </button>
+                  <button
+                    onClick={() => setEditingPlanner(null)}
+                    className="flex-1 px-5 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Заголовок */}
         <div className="mb-12">
@@ -239,15 +312,23 @@ const HomeView = ({
                       <div className={`p-3 rounded-lg ${colorInfo.light}`}>
                         <BookOpen className={`${colorInfo.text}`} size={24} />
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeletePlanner(planner.id);
-                        }}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <Trash2 size={20} />
-                      </button>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => openEdit(e, planner)}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeletePlanner(planner.id);
+                          }}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
                     </div>
 
                     <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
