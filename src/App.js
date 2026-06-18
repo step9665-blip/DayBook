@@ -359,6 +359,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [extraLines, setExtraLines] = useState(0);
   const [showPlannerDropdown, setShowPlannerDropdown] = useState(false);
   const [showRecurringModal, setShowRecurringModal] = useState(false);
 
@@ -482,6 +483,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     if (view === 'week') newDate.setDate(newDate.getDate() + amount * 7);
     if (view === 'month') newDate.setMonth(newDate.getMonth() + amount);
     setCurrentDate(newDate);
+    setExtraLines(0);
   };
 
   // Collect all tags from all loaded tasks
@@ -590,7 +592,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     const dayTasks = getFilteredTasks(allDayTasks);
     const weekday = currentDate.toLocaleDateString('ru-RU', { weekday: 'long' });
     const dayNum = currentDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-    const emptyLines = Math.max(0, 12 - dayTasks.length);
+    const emptyLines = Math.max(0, 10 - dayTasks.length) + extraLines;
 
     return (
       <div className="bg-white rounded-lg border border-[#e9e9e7] overflow-hidden">
@@ -725,6 +727,15 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           {[...Array(emptyLines)].map((_, i) => (
             <div key={i} className="min-h-[44px] border-b border-[#f1f0ef]" />
           ))}
+
+          <div className="flex justify-center py-2">
+            <button
+              onClick={() => setExtraLines(n => n + 5)}
+              className="text-xs text-[#c7c6c4] hover:text-[#9b9a97] transition-colors px-3 py-1 hover:bg-[#f7f6f3] rounded-md"
+            >
+              + добавить строки
+            </button>
+          </div>
         </div>
 
         {/* Блок заметок дня */}
