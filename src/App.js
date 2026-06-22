@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs } from 'firebase/firestore';
@@ -360,6 +360,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [extraLines, setExtraLines] = useState(0);
+  const [isListening, setIsListening] = useState(false);
+  const newTaskInputRef = useRef(null);
   const [showPlannerDropdown, setShowPlannerDropdown] = useState(false);
   const [showRecurringModal, setShowRecurringModal] = useState(false);
 
@@ -496,6 +498,36 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   });
 
   const currentColorInfo = PLANNER_COLORS.find(c => c.id === planner?.color);
+
+  const openInCalendar = (task, dateStr) => {
+    const d = dateStr.replace(/-/g, '');
+    const next = dateStr.replace(/-/g, '').slice(0, 6) + String(Number(dateStr.slice(8)) + 1).padStart(2, '0');
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: task.text,
+      dates: `${d}/${next}`,
+      details: task.notes || '',
+    });
+    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, '_blank');
+  };
+
+  const startVoiceInput = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const recognition = new SR();
+    recognition.lang = 'ru-RU';
+    recognition.interimResults = false;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      if (newTaskInputRef.current) newTaskInputRef.current.value = text;
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    recognition.start();
+  };
+
+  const hasSpeechRecognition = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
   // --- ПОВТОРЯЮЩИЕСЯ ЗАДАЧИ МОДАЛ ---
   const RecurringModal = () => {
@@ -681,6 +713,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                         )}
                       </div>
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0">
+                        <button onClick={() => openInCalendar(task, dateStr)}
+                          className="p-1.5 text-[#9b9a97] hover:text-[#37352f] hover:bg-[#f1f0ef] rounded transition-colors"
+                          title="Добавить в Google Календарь">
+                          <Calendar size={13} />
+                        </button>
                         <button onClick={() => setExpandedNoteId(isNoteOpen ? null : task.id)}
                           className={`p-1.5 rounded transition-colors ${isNoteOpen ? 'text-[#37352f] bg-[#f1f0ef]' : 'text-[#9b9a97] hover:text-[#37352f] hover:bg-[#f1f0ef]'}`}
                           title="Заметка">
@@ -718,10 +755,20 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           <div className="flex items-center min-h-[44px] border-b border-[#f1f0ef] px-3 sm:px-8 md:px-16 focus-within:bg-[#f7f6f3]">
             <span className="mr-3 text-[#c7c6c4] text-xs w-5 shrink-0">{dayTasks.length + 1}</span>
             <input
+              ref={newTaskInputRef}
               className="flex-grow bg-transparent border-none outline-none text-sm text-[#37352f] placeholder-[#c7c6c4]"
               placeholder="Добавить задачу..."
               onKeyDown={e => { if (e.key === 'Enter') { addTask(dateStr, e.target.value); e.target.value = ''; } }}
             />
+            {hasSpeechRecognition && (
+              <button
+                onClick={startVoiceInput}
+                className={`ml-2 p-1.5 rounded transition-colors shrink-0 ${isListening ? 'text-red-500 bg-red-50 animate-pulse' : 'text-[#c7c6c4] hover:text-[#9b9a97] hover:bg-[#f1f0ef]'}`}
+                title="Голосовой ввод"
+              >
+                <Mic size={15} />
+              </button>
+            )}
           </div>
 
           {[...Array(emptyLines)].map((_, i) => (
