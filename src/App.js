@@ -364,6 +364,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const newTaskInputRef = useRef(null);
   const [showPlannerDropdown, setShowPlannerDropdown] = useState(false);
   const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [importantTasks, setImportantTasks] = useState([]);
+  const importantDebounce = useRef(null);
 
   const debounceTimers = useRef({});
   const noteDebounceTimers = useRef({});
@@ -384,6 +386,28 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       setDayNotes(loadedNotes);
     }).catch(err => console.error('Error loading tasks:', err));
   }, [user, plannerId]);
+
+  // Load important tasks
+  useEffect(() => {
+    if (!user || !plannerId) return;
+    setImportantTasks([]);
+    getDocs(collection(db, 'users', user.uid, 'planners', plannerId, 'important')).then(snapshot => {
+      const d = snapshot.docs.find(d => d.id === 'list');
+      if (d) setImportantTasks(d.data().tasks || []);
+    }).catch(() => {});
+    return () => { if (importantDebounce.current) clearTimeout(importantDebounce.current); };
+  }, [user, plannerId]);
+
+  // Save important tasks to Firestore (debounced)
+  const saveImportantTasks = (updated) => {
+    setImportantTasks(updated);
+    if (importantDebounce.current) clearTimeout(importantDebounce.current);
+    importantDebounce.current = setTimeout(() => {
+      if (!user || !plannerId) return;
+      const ref = doc(db, 'users', user.uid, 'planners', plannerId, 'important', 'list');
+      setDoc(ref, { tasks: updated }).catch(err => console.error('Error saving important tasks:', err));
+    }, 500);
+  };
 
   // Auto-populate recurring tasks when date or planner changes
   useEffect(() => {
@@ -884,6 +908,115 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     );
   };
 
+  // --- ВАЖНЫЕ ЗАДАЧИ ---
+  const renderImportantView = () => {
+    const addImportant = (text) => {
+      if (!text.trim()) return;
+      saveImportantTasks([...importantTasks, {
+        id: generateId(), text: text.trim(), tags: [], notes: '',
+        deadline: '', link: '', completed: false, createdAt: new Date().toISOString(),
+      }]);
+    };
+
+    const updateImportant = (id, updates) => {
+      saveImportantTasks(importantTasks.map(t => t.id === id ? { ...t, ...updates } : t));
+    };
+
+    const deleteImportant = (id) => {
+      saveImportantTasks(importantTasks.filter(t => t.id !== id));
+    };
+
+    return (
+      <div className="bg-white rounded-lg border border-[#e9e9e7] overflow-hidden">
+        <div className="px-4 sm:px-8 py-4 border-b border-[#e9e9e7]">
+          <p className="text-xs text-[#9b9a97]">Задачи без привязки к дате — цели, планы, важные дела</p>
+        </div>
+
+        <div className="divide-y divide-[#f1f0ef]">
+          {importantTasks.map((task) => (
+            <div key={task.id} className="group">
+              {/* Основная строка */}
+              <div className="flex items-start gap-3 px-4 sm:px-8 py-3 hover:bg-[#f7f6f3] transition-colors">
+                <input type="checkbox" checked={task.completed}
+                  onChange={() => updateImportant(task.id, { completed: !task.completed })}
+                  className="mt-0.5 w-4 h-4 cursor-pointer accent-[#37352f] shrink-0" />
+                <div className="flex-grow min-w-0">
+                  {/* Текст задачи */}
+                  <input
+                    type="text"
+                    value={task.text}
+                    onChange={e => updateImportant(task.id, { text: e.target.value })}
+                    className={`w-full bg-transparent text-sm text-[#37352f] focus:outline-none ${task.completed ? 'line-through text-[#c7c6c4]' : ''}`}
+                  />
+                  {/* Дедлайн + ссылка + теги */}
+                  <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                    <div className="flex items-center gap-1">
+                      <Calendar size={11} className="text-[#c7c6c4]" />
+                      <input
+                        type="date"
+                        value={task.deadline || ''}
+                        onChange={e => updateImportant(task.id, { deadline: e.target.value })}
+                        className="text-xs text-[#9b9a97] bg-transparent focus:outline-none cursor-pointer"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={task.link || ''}
+                      onChange={e => updateImportant(task.id, { link: e.target.value })}
+                      placeholder="Ссылка на задачу..."
+                      className="text-xs text-[#9b9a97] placeholder-[#c7c6c4] bg-transparent focus:outline-none min-w-[140px] flex-1"
+                    />
+                    {task.link && (
+                      <a href={task.link} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="text-xs text-[#37352f] underline underline-offset-2 hover:text-black shrink-0">
+                        открыть →
+                      </a>
+                    )}
+                  </div>
+                  {/* Теги */}
+                  {(task.tags || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {task.tags.map(tag => (
+                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#f1f0ef] text-[#9b9a97] rounded">#{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  {/* Заметка */}
+                  {task.notes !== undefined && (
+                    <textarea
+                      value={task.notes || ''}
+                      onChange={e => updateImportant(task.id, { notes: e.target.value })}
+                      placeholder="Заметка..."
+                      rows={task.notes ? undefined : 1}
+                      className="w-full mt-1.5 bg-transparent text-xs text-[#9b9a97] placeholder-[#c7c6c4] focus:outline-none resize-none leading-relaxed"
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
+                  <button onClick={() => deleteImportant(task.id)}
+                    className="p-1.5 text-[#9b9a97] hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Строка добавления */}
+        <div className="flex items-center gap-3 px-4 sm:px-8 py-3 border-t border-[#f1f0ef] focus-within:bg-[#f7f6f3]">
+          <div className="w-4 h-4 shrink-0" />
+          <input
+            className="flex-grow bg-transparent text-sm text-[#37352f] placeholder-[#c7c6c4] focus:outline-none"
+            placeholder="Добавить важную задачу..."
+            onKeyDown={e => { if (e.key === 'Enter') { addImportant(e.target.value); e.target.value = ''; } }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#f7f6f3] p-2 sm:p-6">
       {showRecurringModal && <RecurringModal />}
@@ -950,13 +1083,14 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         {/* Переключатель + навигация */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-5 gap-3">
           <div className="flex bg-white border border-[#e9e9e7] rounded-md overflow-hidden">
-            {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }].map(btn => (
+            {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }, { id: 'important', label: 'Важные задачи' }].map(btn => (
               <button key={btn.id} onClick={() => setView(btn.id)}
                 className={`px-4 sm:px-6 py-2 text-sm font-medium transition-all ${view === btn.id ? 'bg-[#37352f] text-white' : 'text-[#9b9a97] hover:text-[#37352f] hover:bg-[#f1f0ef]'}`}>
                 {btn.label}
               </button>
             ))}
           </div>
+          {view !== 'important' && (
           <div className="flex items-center gap-2 bg-white border border-[#e9e9e7] rounded-md px-2 py-1">
             <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-[#f1f0ef] rounded transition-colors">
               <ChevronLeft size={18} className="text-[#37352f]" />
@@ -970,11 +1104,13 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               <ChevronRight size={18} className="text-[#37352f]" />
             </button>
           </div>
+          )}
         </div>
 
         {view === 'day' && renderDayView()}
         {view === 'week' && renderWeekView()}
         {view === 'month' && renderMonthView()}
+        {view === 'important' && renderImportantView()}
       </div>
     </div>
   );
