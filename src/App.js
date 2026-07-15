@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs, getDoc } from 'firebase/firestore';
 
 const PLANNER_COLORS = [
   { id: 'blue',   label: 'Синий',      dot: '#3b82f6' },
@@ -367,6 +367,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [importantTasks, setImportantTasks] = useState([]);
   const importantDebounce = useRef(null);
+  const [monthlyReview, setMonthlyReview] = useState({ goals: [], ideas: [] });
+  const reviewDebounce = useRef(null);
 
   const debounceTimers = useRef({});
   const noteDebounceTimers = useRef({});
@@ -509,6 +511,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     if (view === 'day') newDate.setDate(newDate.getDate() + amount);
     if (view === 'week') newDate.setDate(newDate.getDate() + amount * 7);
     if (view === 'month') newDate.setMonth(newDate.getMonth() + amount);
+    if (view === 'summary') newDate.setMonth(newDate.getMonth() + amount);
     setCurrentDate(newDate);
     setExtraLines(0);
   };
@@ -523,6 +526,64 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   });
 
   const currentColorInfo = PLANNER_COLORS.find(c => c.id === planner?.color);
+
+  // Ключ месяца ГГГГ-ММ для обзора
+  const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+  // Загрузка обзора месяца (цели/идеи)
+  useEffect(() => {
+    if (!user || !plannerId) return;
+    const ref = doc(db, 'users', user.uid, 'planners', plannerId, 'reviews', monthKey);
+    getDoc(ref).then(snap => {
+      if (snap.exists()) setMonthlyReview({ goals: snap.data().goals || [], ideas: snap.data().ideas || [] });
+      else setMonthlyReview({ goals: [], ideas: [] });
+    }).catch(() => setMonthlyReview({ goals: [], ideas: [] }));
+  }, [user, plannerId, monthKey]);
+
+  const saveReview = (updated) => {
+    setMonthlyReview(updated);
+    if (reviewDebounce.current) clearTimeout(reviewDebounce.current);
+    reviewDebounce.current = setTimeout(() => {
+      if (!user || !plannerId) return;
+      const ref = doc(db, 'users', user.uid, 'planners', plannerId, 'reviews', monthKey);
+      setDoc(ref, updated).catch(err => console.error('Error saving review:', err));
+    }, 500);
+  };
+
+  // Перенос задачи с одной даты на другую
+  const moveTaskToDate = (fromDateStr, task, toDateStr) => {
+    if (!toDateStr) return;
+    setTasks(prev => ({
+      ...prev,
+      [fromDateStr]: (prev[fromDateStr] || []).filter(t => t.id !== task.id),
+      [toDateStr]: [...(prev[toDateStr] || []), { ...task }],
+    }));
+  };
+
+  // Перенос задачи в «Важные задачи»
+  const moveTaskToImportant = (fromDateStr, task) => {
+    saveImportantTasks([...importantTasks, {
+      id: generateId(), text: task.text, tags: task.tags || [], notes: task.notes || '',
+      deadline: '', link: '', completed: false, createdAt: new Date().toISOString(),
+    }]);
+    setTasks(prev => ({ ...prev, [fromDateStr]: (prev[fromDateStr] || []).filter(t => t.id !== task.id) }));
+  };
+
+  // Создать «Важную задачу» из текста (для целей)
+  const addTextToImportant = (text) => {
+    if (!text.trim()) return;
+    saveImportantTasks([...importantTasks, {
+      id: generateId(), text: text.trim(), tags: [], notes: '',
+      deadline: '', link: '', completed: false, createdAt: new Date().toISOString(),
+    }]);
+  };
+
+  // Добавить задачу на конкретную дату из текста (для целей)
+  const addTextToDate = (text, dateStr) => {
+    if (!text.trim() || !dateStr) return;
+    const newTask = { id: generateId(), text: text.trim(), tags: [], notes: '', completed: false, createdAt: new Date().toISOString() };
+    setTasks(prev => ({ ...prev, [dateStr]: [...(prev[dateStr] || []), newTask] }));
+  };
 
   const moveToNextDay = (task, dateStr) => {
     const d = new Date(dateStr + 'T00:00:00');
@@ -695,9 +756,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               )}
             </div>
           </div>
-          <div className="text-left sm:text-right">
-            <p className="text-base font-semibold text-[#38513e] capitalize">{weekday}</p>
-            <p className="text-xs text-[#8a9d8c]">{dayNum}</p>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+              <ChevronLeft size={18} />
+            </button>
+            <div className="text-center min-w-[130px]">
+              <p className="text-base font-semibold text-[#38513e] capitalize">{weekday}</p>
+              <p className="text-xs text-[#8a9d8c]">{dayNum}</p>
+            </div>
+            <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
 
@@ -865,8 +934,21 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const renderWeekView = () => {
     const startOfWeek = new Date(currentDate);
     startOfWeek.setDate(startOfWeek.getDate() - getDayOfWeek(startOfWeek));
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    const weekLabel = `${startOfWeek.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} — ${endOfWeek.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}`;
 
     return (
+      <div>
+      <div className="flex items-center justify-center gap-2 mb-3">
+        <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+          <ChevronLeft size={18} />
+        </button>
+        <span className="text-sm font-semibold text-[#38513e] min-w-[150px] text-center">{weekLabel}</span>
+        <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+          <ChevronRight size={18} />
+        </button>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5">
         {[...Array(7)].map((_, i) => {
           const d = new Date(startOfWeek);
@@ -893,6 +975,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           );
         })}
       </div>
+      </div>
     );
   };
 
@@ -902,8 +985,19 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
     const firstDayIndex = (start.getDay() || 7) - 1;
 
+    const monthLabel = currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+
     return (
       <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+        <div className="flex items-center justify-center gap-2 py-3 border-b border-[#e3ebe3]">
+          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-sm font-semibold text-[#38513e] capitalize min-w-[150px] text-center">{monthLabel}</span>
+          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronRight size={18} />
+          </button>
+        </div>
         <div className="grid grid-cols-7 border-b border-[#e3ebe3]">
           {WEEKDAYS.map(d => (
             <div key={d} className="py-2 text-center text-[10px] font-semibold text-[#8a9d8c] uppercase tracking-wider">{d}</div>
@@ -1056,6 +1150,267 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     );
   };
 
+  // --- ИТОГИ МЕСЯЦА ---
+  const renderSummaryView = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const monthName = currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+
+    // Все задачи месяца
+    const allMonthTasks = Object.entries(tasks)
+      .filter(([dStr]) => dStr.startsWith(monthPrefix))
+      .flatMap(([dStr, arr]) => (arr || []).map(t => ({ ...t, dateStr: dStr })));
+    const total = allMonthTasks.length;
+    const completed = allMonthTasks.filter(t => t.completed).length;
+    const notCompleted = total - completed;
+    const percent = total ? Math.round((completed / total) * 100) : 0;
+
+    // Статистика по тегам
+    const tagMap = {};
+    allMonthTasks.forEach(t => (t.tags || []).forEach(tag => {
+      if (!tagMap[tag]) tagMap[tag] = { total: 0, done: 0 };
+      tagMap[tag].total++;
+      if (t.completed) tagMap[tag].done++;
+    }));
+    const tagStats = Object.entries(tagMap).map(([tag, v]) => ({ tag, ...v })).sort((a, b) => b.total - a.total);
+
+    // Важные задачи, выполненные в этом месяце
+    const importantDone = importantTasks.filter(t => t.completed && t.deadline && t.deadline.startsWith(monthPrefix));
+
+    // Незавершённые задачи месяца
+    const unfinished = allMonthTasks.filter(t => !t.completed).sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+
+    // Диапазон дат для переноса (следующий месяц)
+    const nextMonthMin = `${month === 11 ? year + 1 : year}-${String(((month + 1) % 12) + 1).padStart(2, '0')}-01`;
+
+    // Кольцевая диаграмма
+    const R = 54, C = 2 * Math.PI * R;
+    const doneLen = total ? (completed / total) * C : 0;
+
+    const fmtDate = (dStr) => new Date(dStr + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+
+    return (
+      <div className="space-y-4">
+        {/* Навигация по месяцам */}
+        <div className="flex items-center justify-center gap-2">
+          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-base font-semibold text-[#38513e] capitalize min-w-[160px] text-center">{monthName}</span>
+          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+        {/* KPI-плитки */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Всего задач', value: total, color: '#38513e' },
+            { label: 'Выполнено', value: completed, color: '#4a6b4a' },
+            { label: 'Не выполнено', value: notCompleted, color: '#a9705a' },
+            { label: 'Прогресс', value: `${percent}%`, color: '#6b8e6b' },
+          ].map(kpi => (
+            <div key={kpi.label} className="bg-white rounded-2xl border border-[#e3ebe3] shadow-[0_2px_12px_rgba(56,81,62,0.05)] p-4 text-center">
+              <p className="text-2xl font-semibold" style={{ color: kpi.color }}>{kpi.value}</p>
+              <p className="text-xs text-[#8a9d8c] mt-0.5">{kpi.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Диаграммы */}
+        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 bg-[#38513e]">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2"><BarChart3 size={16} /> Итоги месяца</h2>
+          </div>
+          <div className="p-5 sm:p-8 flex flex-col md:flex-row gap-8 items-center">
+            {/* Donut */}
+            <div className="relative shrink-0">
+              <svg viewBox="0 0 140 140" className="w-40 h-40">
+                <circle cx="70" cy="70" r={R} fill="none" stroke="#eef3ee" strokeWidth="16" />
+                <circle cx="70" cy="70" r={R} fill="none" stroke="#4a6b4a" strokeWidth="16" strokeLinecap="round"
+                  strokeDasharray={`${doneLen} ${C - doneLen}`} transform="rotate(-90 70 70)" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-3xl font-semibold text-[#38513e]">{percent}%</span>
+                <span className="text-xs text-[#8a9d8c]">{completed} из {total}</span>
+              </div>
+            </div>
+            {/* Бары по тегам */}
+            <div className="flex-grow w-full min-w-0">
+              <p className="text-xs font-medium text-[#8a9d8c] mb-3 uppercase tracking-wider">По хэштегам</p>
+              {tagStats.length === 0 ? (
+                <p className="text-sm text-[#a9bcac]">Нет задач с тегами в этом месяце</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {tagStats.map(s => (
+                    <div key={s.tag}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-[#38513e]">#{s.tag}</span>
+                        <span className="text-[#8a9d8c]">{s.done}/{s.total}</span>
+                      </div>
+                      <div className="h-2.5 bg-[#eef3ee] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#4a6b4a] rounded-full transition-all" style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Важное за месяц */}
+        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3] flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[#38513e] flex items-center gap-2"><Check size={16} className="text-[#4a6b4a]" /> Важное за месяц</h2>
+            <span className="text-sm text-[#8a9d8c]">{importantDone.length}</span>
+          </div>
+          <div className="p-3 sm:p-5">
+            {importantDone.length === 0 ? (
+              <p className="text-sm text-[#a9bcac] px-2 py-3">В этом месяце нет выполненных важных задач</p>
+            ) : (
+              <div className="space-y-1">
+                {importantDone.map(t => (
+                  <div key={t.id} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
+                    <Check size={14} className="text-[#4a6b4a] shrink-0" />
+                    <span className="text-sm text-[#38513e] line-through decoration-[#a9bcac]">{t.text}</span>
+                    <span className="text-xs text-[#8a9d8c] ml-auto shrink-0">{fmtDate(t.deadline)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Незавершённые задачи */}
+        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3] flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[#38513e]">Незавершённые задачи</h2>
+            <span className="text-sm text-[#8a9d8c]">{unfinished.length}</span>
+          </div>
+          <div className="p-3 sm:p-5">
+            {unfinished.length === 0 ? (
+              <p className="text-sm text-[#a9bcac] px-2 py-3">Все задачи месяца выполнены 🎉</p>
+            ) : (
+              <div className="space-y-1">
+                {unfinished.map(t => (
+                  <div key={t.id + t.dateStr} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
+                    <span className="text-xs text-[#8a9d8c] w-14 shrink-0">{fmtDate(t.dateStr)}</span>
+                    <span className="text-sm text-[#38513e] flex-grow min-w-0 truncate">{t.text}</span>
+                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => updateTask(t.dateStr, t.id, { completed: true })}
+                        title="Закрыть задачу"
+                        className="p-1.5 text-[#8a9d8c] hover:text-[#4a6b4a] hover:bg-[#eef3ee] rounded-full transition-colors">
+                        <Check size={14} />
+                      </button>
+                      <button onClick={() => moveTaskToImportant(t.dateStr, t)}
+                        title="Перенести в «Важные задачи»"
+                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+                        <ArrowRight size={14} />
+                      </button>
+                      <label title="Перенести на дату следующего месяца"
+                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors cursor-pointer relative">
+                        <Calendar size={14} />
+                        <input type="date" min={nextMonthMin}
+                          onChange={e => moveTaskToDate(t.dateStr, t, e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer" />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Цели на следующий месяц */}
+        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3]">
+            <h2 className="text-base font-semibold text-[#38513e] flex items-center gap-2"><Target size={16} className="text-[#4a6b4a]" /> Цели на следующий месяц</h2>
+          </div>
+          <div className="p-3 sm:p-5">
+            <div className="space-y-1">
+              {monthlyReview.goals.map(g => (
+                <div key={g.id} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
+                  <input type="checkbox" checked={g.done}
+                    onChange={() => saveReview({ ...monthlyReview, goals: monthlyReview.goals.map(x => x.id === g.id ? { ...x, done: !x.done } : x) })}
+                    className="w-4 h-4 cursor-pointer accent-[#4a6b4a] shrink-0" />
+                  <input value={g.text}
+                    onChange={e => saveReview({ ...monthlyReview, goals: monthlyReview.goals.map(x => x.id === g.id ? { ...x, text: e.target.value } : x) })}
+                    className={`flex-grow bg-transparent text-sm focus:outline-none ${g.done ? 'line-through text-[#a9bcac]' : 'text-[#38513e]'}`} />
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => addTextToImportant(g.text)}
+                      title="Создать «Важную задачу»"
+                      className="px-2 py-1 text-[10px] text-[#4a6b4a] hover:bg-[#eef3ee] rounded-full transition-colors">
+                      → в важные
+                    </button>
+                    <label title="Создать задачу на дату следующего месяца"
+                      className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors cursor-pointer relative">
+                      <Calendar size={13} />
+                      <input type="date" min={nextMonthMin}
+                        onChange={e => addTextToDate(g.text, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer" />
+                    </label>
+                    <button onClick={() => saveReview({ ...monthlyReview, goals: monthlyReview.goals.filter(x => x.id !== g.id) })}
+                      className="p-1.5 text-[#a9bcac] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
+              <Plus size={15} className="text-[#6b8e6b] shrink-0" />
+              <input className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
+                placeholder="Добавить цель..."
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && e.target.value.trim()) {
+                    saveReview({ ...monthlyReview, goals: [...monthlyReview.goals, { id: generateId(), text: e.target.value.trim(), done: false }] });
+                    e.target.value = '';
+                  }
+                }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Идеи на следующий месяц */}
+        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3]">
+            <h2 className="text-base font-semibold text-[#38513e] flex items-center gap-2"><Lightbulb size={16} className="text-[#4a6b4a]" /> Идеи на следующий месяц</h2>
+          </div>
+          <div className="p-3 sm:p-5">
+            <div className="space-y-1">
+              {monthlyReview.ideas.map(idea => (
+                <div key={idea.id} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
+                  <Lightbulb size={13} className="text-[#b0c3b2] shrink-0" />
+                  <input value={idea.text}
+                    onChange={e => saveReview({ ...monthlyReview, ideas: monthlyReview.ideas.map(x => x.id === idea.id ? { ...x, text: e.target.value } : x) })}
+                    className="flex-grow bg-transparent text-sm text-[#38513e] focus:outline-none" />
+                  <button onClick={() => saveReview({ ...monthlyReview, ideas: monthlyReview.ideas.filter(x => x.id !== idea.id) })}
+                    className="p-1.5 text-[#a9bcac] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
+              <Plus size={15} className="text-[#6b8e6b] shrink-0" />
+              <input className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
+                placeholder="Добавить идею..."
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && e.target.value.trim()) {
+                    saveReview({ ...monthlyReview, ideas: [...monthlyReview.ideas, { id: generateId(), text: e.target.value.trim() }] });
+                    e.target.value = '';
+                  }
+                }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#f4f7f4] p-2 sm:p-6">
       {showRecurringModal && <RecurringModal />}
@@ -1129,27 +1484,34 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               </button>
             ))}
           </div>
-          {view !== 'important' && (
-          <div className="flex items-center gap-2 bg-white border border-[#e3ebe3] rounded-full px-2 py-1">
-            <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-[#eef3ee] rounded-full transition-colors">
-              <ChevronLeft size={18} className="text-[#38513e]" />
-            </button>
-            <span className="text-sm font-medium text-[#38513e] min-w-[130px] sm:min-w-[160px] text-center">
-              {view === 'day'
-                ? currentDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
-                : currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
-            </span>
-            <button onClick={() => navigate(1)} className="p-1.5 hover:bg-[#eef3ee] rounded-full transition-colors">
-              <ChevronRight size={18} className="text-[#38513e]" />
-            </button>
-          </div>
-          )}
+          {(() => {
+            const today = new Date();
+            const daysInMon = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const isMonthEnd = daysInMon - today.getDate() <= 2; // последние 3 дня месяца
+            const active = view === 'summary';
+            return (
+              <button onClick={() => setView(active ? 'day' : 'summary')}
+                title={isMonthEnd ? 'Пора подвести итоги!' : 'Итоги месяца'}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all self-end sm:self-auto ${
+                  active
+                    ? 'bg-[#38513e] text-white border-[#38513e]'
+                    : isMonthEnd
+                      ? 'bg-[#38513e] text-white border-[#38513e] shadow-[0_0_0_3px_rgba(56,81,62,0.15)] animate-pulse'
+                      : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
+                }`}>
+                <BarChart3 size={16} />
+                Итоги
+                {isMonthEnd && !active && <span className="text-[10px] hidden sm:inline">• пора!</span>}
+              </button>
+            );
+          })()}
         </div>
 
         {view === 'day' && renderDayView()}
         {view === 'week' && renderWeekView()}
         {view === 'month' && renderMonthView()}
         {view === 'important' && renderImportantView()}
+        {view === 'summary' && renderSummaryView()}
       </div>
     </div>
   );
