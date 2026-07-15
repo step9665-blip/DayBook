@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs } from 'firebase/firestore';
@@ -523,6 +523,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
   const currentColorInfo = PLANNER_COLORS.find(c => c.id === planner?.color);
 
+  const moveToNextDay = (task, dateStr) => {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    const nextDate = d.toISOString().slice(0, 10);
+    setTasks(prev => ({
+      ...prev,
+      [dateStr]: (prev[dateStr] || []).filter(t => t.id !== task.id),
+      [nextDate]: [...(prev[nextDate] || []), { ...task }],
+    }));
+  };
+
   const openInCalendar = (task, dateStr) => {
     const d = dateStr.replace(/-/g, '');
     const next = dateStr.replace(/-/g, '').slice(0, 6) + String(Number(dateStr.slice(8)) + 1).padStart(2, '0');
@@ -737,6 +748,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                         )}
                       </div>
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0">
+                        <button onClick={() => moveToNextDay(task, dateStr)}
+                          className="p-1.5 text-[#9b9a97] hover:text-[#37352f] hover:bg-[#f1f0ef] rounded transition-colors"
+                          title="Перенести на следующий день">
+                          <ArrowRight size={13} />
+                        </button>
                         <button onClick={() => openInCalendar(task, dateStr)}
                           className="p-1.5 text-[#9b9a97] hover:text-[#37352f] hover:bg-[#f1f0ef] rounded transition-colors"
                           title="Добавить в Google Календарь">
