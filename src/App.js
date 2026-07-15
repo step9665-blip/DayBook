@@ -356,6 +356,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [editingText, setEditingText] = useState('');
   const [editingTags, setEditingTags] = useState([]);
   const [expandedNoteId, setExpandedNoteId] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null); // { id, type: 'delete' | 'move' }
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -747,8 +748,27 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                           <p className="text-xs text-[#9b9a97] mt-0.5 truncate">{task.notes}</p>
                         )}
                       </div>
+                      {confirmAction && confirmAction.id === task.id ? (
+                        <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                          <span className="text-xs text-[#9b9a97] hidden sm:inline">
+                            {confirmAction.type === 'delete' ? 'Удалить?' : 'Перенести?'}
+                          </span>
+                          <button onClick={() => {
+                              if (confirmAction.type === 'delete') deleteTask(dateStr, task.id);
+                              else moveToNextDay(task, dateStr);
+                              setConfirmAction(null);
+                            }}
+                            className={`px-2 py-1 text-xs rounded transition-colors text-white ${confirmAction.type === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#37352f] hover:bg-[#2f2d27]'}`}>
+                            Да
+                          </button>
+                          <button onClick={() => setConfirmAction(null)}
+                            className="px-2 py-1 text-xs text-[#9b9a97] hover:text-[#37352f] hover:bg-[#f1f0ef] rounded transition-colors">
+                            Нет
+                          </button>
+                        </div>
+                      ) : (
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0">
-                        <button onClick={() => moveToNextDay(task, dateStr)}
+                        <button onClick={() => setConfirmAction({ id: task.id, type: 'move' })}
                           className="p-1.5 text-[#9b9a97] hover:text-[#37352f] hover:bg-[#f1f0ef] rounded transition-colors"
                           title="Перенести на следующий день">
                           <ArrowRight size={13} />
@@ -763,11 +783,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                           title="Заметка">
                           <ChevronDown size={13} className={`transition-transform ${isNoteOpen ? 'rotate-180' : ''}`} />
                         </button>
-                        <button onClick={() => deleteTask(dateStr, task.id)}
+                        <button onClick={() => setConfirmAction({ id: task.id, type: 'delete' })}
                           className="p-1.5 text-[#9b9a97] hover:text-red-500 hover:bg-red-50 rounded transition-colors">
                           <Trash2 size={13} />
                         </button>
                       </div>
+                      )}
                     </>
                   )}
                 </div>
