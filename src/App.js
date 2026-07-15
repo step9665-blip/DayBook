@@ -993,6 +993,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                         type="date"
                         value={task.deadline || ''}
                         onChange={e => updateImportant(task.id, { deadline: e.target.value })}
+                        onClick={e => { try { e.target.showPicker(); } catch (err) {} }}
                         className="text-xs text-[#9b9a97] bg-transparent focus:outline-none cursor-pointer"
                       />
                     </div>
