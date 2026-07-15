@@ -964,37 +964,38 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     };
 
     return (
-      <div className="bg-white rounded-lg border border-[#e9e9e7] overflow-hidden">
-        <div className="px-4 sm:px-8 py-4 border-b border-[#e9e9e7]">
-          <p className="text-xs text-[#9b9a97]">Задачи без привязки к дате — цели, планы, важные дела</p>
+      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+        <div className="px-5 sm:px-8 py-5 bg-[#38513e]">
+          <h2 className="text-base font-semibold text-white">Важные задачи</h2>
+          <p className="text-xs text-[#b8c9ba] mt-0.5">Задачи без привязки к дате — цели, планы, важные дела</p>
         </div>
 
-        <div className="divide-y divide-[#f1f0ef]">
+        <div className="divide-y divide-[#eef3ee] p-2 sm:p-3">
           {importantTasks.map((task) => (
             <div key={task.id} className="group">
               {/* Основная строка */}
-              <div className="flex items-start gap-3 px-4 sm:px-8 py-3 hover:bg-[#f7f6f3] transition-colors">
+              <div className="flex items-start gap-3 px-3 sm:px-5 py-3 rounded-2xl hover:bg-[#f4f7f4] transition-colors">
                 <input type="checkbox" checked={task.completed}
                   onChange={() => updateImportant(task.id, { completed: !task.completed })}
-                  className="mt-0.5 w-4 h-4 cursor-pointer accent-[#37352f] shrink-0" />
+                  className="mt-0.5 w-4 h-4 cursor-pointer accent-[#4a6b4a] shrink-0" />
                 <div className="flex-grow min-w-0">
                   {/* Текст задачи */}
                   <input
                     type="text"
                     value={task.text}
                     onChange={e => updateImportant(task.id, { text: e.target.value })}
-                    className={`w-full bg-transparent text-sm text-[#37352f] focus:outline-none ${task.completed ? 'line-through text-[#c7c6c4]' : ''}`}
+                    className={`w-full bg-transparent text-sm text-[#2f3d31] focus:outline-none ${task.completed ? 'line-through text-[#a9bcac]' : ''}`}
                   />
                   {/* Дедлайн + ссылка + теги */}
                   <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={11} className="text-[#c7c6c4]" />
+                    <div className="flex items-center gap-1 bg-[#eef3ee] rounded-full px-2.5 py-1">
+                      <Calendar size={11} className="text-[#6b8e6b]" />
                       <input
                         type="date"
                         value={task.deadline || ''}
                         onChange={e => updateImportant(task.id, { deadline: e.target.value })}
                         onClick={e => { try { e.target.showPicker(); } catch (err) {} }}
-                        className="text-xs text-[#9b9a97] bg-transparent focus:outline-none cursor-pointer"
+                        className="text-xs text-[#5a7a5a] bg-transparent focus:outline-none cursor-pointer"
                       />
                     </div>
                     <input
@@ -1002,12 +1003,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                       value={task.link || ''}
                       onChange={e => updateImportant(task.id, { link: e.target.value })}
                       placeholder="Ссылка на задачу..."
-                      className="text-xs text-[#9b9a97] placeholder-[#c7c6c4] bg-transparent focus:outline-none min-w-[140px] flex-1"
+                      className="text-xs text-[#5a7a5a] placeholder-[#b0c3b2] bg-transparent focus:outline-none min-w-[140px] flex-1"
                     />
                     {task.link && (
                       <a href={task.link} target="_blank" rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}
-                        className="text-xs text-[#37352f] underline underline-offset-2 hover:text-black shrink-0">
+                        className="text-xs font-medium text-[#4a6b4a] hover:text-[#38513e] shrink-0">
                         открыть →
                       </a>
                     )}
@@ -1016,7 +1017,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                   {(task.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {task.tags.map(tag => (
-                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#f1f0ef] text-[#9b9a97] rounded">#{tag}</span>
+                        <span key={tag} className="text-[10px] px-2 py-0.5 bg-[#e3ebe3] text-[#5a7a5a] rounded-full">#{tag}</span>
                       ))}
                     </div>
                   )}
@@ -1027,13 +1028,13 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                       onChange={e => updateImportant(task.id, { notes: e.target.value })}
                       placeholder="Заметка..."
                       rows={task.notes ? undefined : 1}
-                      className="w-full mt-1.5 bg-transparent text-xs text-[#9b9a97] placeholder-[#c7c6c4] focus:outline-none resize-none leading-relaxed"
+                      className="w-full mt-1.5 bg-transparent text-xs text-[#6b8e6b] placeholder-[#b0c3b2] focus:outline-none resize-none leading-relaxed"
                     />
                   )}
                 </div>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
                   <button onClick={() => deleteImportant(task.id)}
-                    className="p-1.5 text-[#9b9a97] hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+                    className="p-1.5 text-[#9bb09d] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -1043,10 +1044,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         {/* Строка добавления */}
-        <div className="flex items-center gap-3 px-4 sm:px-8 py-3 border-t border-[#f1f0ef] focus-within:bg-[#f7f6f3]">
-          <div className="w-4 h-4 shrink-0" />
+        <div className="flex items-center gap-3 mx-2 sm:mx-3 mb-2 sm:mb-3 px-3 sm:px-5 py-3 rounded-2xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
+          <Plus size={16} className="text-[#6b8e6b] shrink-0" />
           <input
-            className="flex-grow bg-transparent text-sm text-[#37352f] placeholder-[#c7c6c4] focus:outline-none"
+            className="flex-grow bg-transparent text-sm text-[#2f3d31] placeholder-[#a9bcac] focus:outline-none"
             placeholder="Добавить важную задачу..."
             onKeyDown={e => { if (e.key === 'Enter') { addImportant(e.target.value); e.target.value = ''; } }}
           />
