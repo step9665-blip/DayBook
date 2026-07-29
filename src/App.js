@@ -552,7 +552,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
   // Перенос задачи с одной даты на другую
   const moveTaskToDate = (fromDateStr, task, toDateStr) => {
-    if (!toDateStr) return;
+    if (!toDateStr || toDateStr === fromDateStr) return;
     setTasks(prev => ({
       ...prev,
       [fromDateStr]: (prev[fromDateStr] || []).filter(t => t.id !== task.id),
@@ -586,9 +586,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   };
 
   const moveToNextDay = (task, dateStr) => {
-    const d = new Date(dateStr + 'T00:00:00');
-    d.setDate(d.getDate() + 1);
+    const d = new Date(dateStr + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + 1);
     const nextDate = d.toISOString().slice(0, 10);
+    if (nextDate === dateStr) return;
     setTasks(prev => ({
       ...prev,
       [dateStr]: (prev[dateStr] || []).filter(t => t.id !== task.id),
