@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E9E5C"/>
+      <stop offset="100%" stop-color="#0E6B3E"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#B9F0CE"/>
+      <stop offset="100%" stop-color="#3FCB7C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background squircle -->
+  <rect x="0" y="0" width="512" height="512" rx="118" fill="url(#bg)"/>
+
+  <!-- soft inner shadow ellipse for depth -->
+  <ellipse cx="256" cy="470" rx="190" ry="46" fill="#062B18" opacity="0.18"/>
+
+  <!-- notebook back sheet (slight offset for stack effect) -->
+  <rect x="140" y="118" width="234" height="308" rx="20" fill="#0B5A34"/>
+
+  <!-- notebook page -->
+  <rect x="126" y="100" width="234" height="308" rx="20" fill="#FBF9F2"/>
+
+  <!-- folded corner (dog-ear) -->
+  <path d="M 300 100 L 360 100 L 360 160 Z" fill="#E7E0CC"/>
+  <path d="M 300 100 L 360 160 L 300 160 Z" fill="#FBF9F2"/>
+
+  <!-- spiral binding -->
+  <g fill="none" stroke="#0B5A34" stroke-width="10" stroke-linecap="round">
+    <line x1="126" y1="140" x2="104" y2="140"/>
+    <line x1="126" y1="184" x2="104" y2="184"/>
+    <line x1="126" y1="228" x2="104" y2="228"/>
+    <line x1="126" y1="272" x2="104" y2="272"/>
+    <line x1="126" y1="316" x2="104" y2="316"/>
+    <line x1="126" y1="360" x2="104" y2="360"/>
+  </g>
+  <g fill="#FBF9F2" stroke="#0B5A34" stroke-width="8">
+    <circle cx="104" cy="140" r="9"/>
+    <circle cx="104" cy="184" r="9"/>
+    <circle cx="104" cy="228" r="9"/>
+    <circle cx="104" cy="272" r="9"/>
+    <circle cx="104" cy="316" r="9"/>
+    <circle cx="104" cy="360" r="9"/>
+  </g>
+
+  <!-- text lines on page -->
+  <g fill="#C9C2A8">
+    <rect x="222" y="220" width="112" height="16" rx="8"/>
+    <rect x="222" y="256" width="112" height="16" rx="8"/>
+    <rect x="222" y="292" width="80" height="16" rx="8"/>
+  </g>
+
+  <!-- ribbon bookmark -->
+  <path d="M 222 60 L 274 60 L 274 250 L 248 222 L 222 250 Z" fill="url(#ribbon)"/>
+  <rect x="222" y="60" width="52" height="26" fill="#0E6B3E" opacity="0.35"/>
+</svg>
