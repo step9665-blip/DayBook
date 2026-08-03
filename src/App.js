@@ -719,7 +719,9 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const renderDayView = () => {
     const dateStr = formatDate(currentDate);
     const allDayTasks = tasks[dateStr] || [];
-    const dayTasks = getFilteredTasks(allDayTasks);
+    const dayTasks = getFilteredTasks(allDayTasks)
+      .slice()
+      .sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
     const weekday = currentDate.toLocaleDateString('ru-RU', { weekday: 'long' });
     const dayNum = currentDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
     const emptyLines = Math.max(0, 10 - dayTasks.length) + extraLines;
@@ -956,7 +958,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           d.setDate(startOfWeek.getDate() + i);
           const dStr = formatDate(d);
           const isToday = dStr === formatDate(new Date());
-          const dayTasks = getFilteredTasks(tasks[dStr] || []);
+          const dayTasks = getFilteredTasks(tasks[dStr] || []).slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
 
           return (
             <div key={i} onClick={() => { setCurrentDate(d); setView('day'); }}
@@ -1010,7 +1012,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             const isValidDay = dayNum > 0 && dayNum <= daysInMonth;
             const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
             const dStr = formatDate(dayDate);
-            const dayTasks = getFilteredTasks(tasks[dStr] || []);
+            const dayTasks = getFilteredTasks(tasks[dStr] || []).slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
             const isToday = dStr === formatDate(new Date());
 
             return (
@@ -1066,7 +1068,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         <div className="divide-y divide-[#eef3ee] p-2 sm:p-3">
-          {importantTasks.map((task) => (
+          {importantTasks.slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0)).map((task) => (
             <div key={task.id} className="group">
               {/* Основная строка */}
               <div className="flex items-start gap-3 px-3 sm:px-5 py-3 rounded-2xl hover:bg-[#f4f7f4] transition-colors">
