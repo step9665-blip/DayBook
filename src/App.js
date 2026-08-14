@@ -324,7 +324,7 @@ const HomeView = ({
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-sm font-medium text-[#38513e] leading-snug">{planner.name}</h3>
-                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0">
+                    <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ml-2 shrink-0">
                       <button onClick={e => openEdit(e, planner)}
                         className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded transition-colors">
                         <Pencil size={13} />
@@ -859,7 +859,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                           </button>
                         </div>
                       ) : (
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0">
+                      <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ml-2 shrink-0">
                         <button onClick={() => setConfirmAction({ id: task.id, type: 'move' })}
                           className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded transition-colors"
                           title="Перенести на следующий день">
@@ -1156,7 +1156,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                     />
                   )}
                 </div>
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
+                <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
                   <button onClick={() => deleteImportant(task.id)}
                     className="p-1.5 text-[#9bb09d] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                     <Trash2 size={13} />
@@ -1210,7 +1210,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                   {(t.tags || []).slice(0, 2).map(tag => (
                     <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/60 text-[#8a9d8c] rounded shrink-0 hidden sm:inline">#{tag}</span>
                   ))}
-                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button onClick={() => updateTask(t.dateStr, t.id, { completed: true })}
                       title="Закрыть задачу"
                       className="p-1.5 text-[#8a9d8c] hover:text-[#4a6b4a] hover:bg-white/70 rounded-full transition-colors">
@@ -1386,7 +1386,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                   <div key={t.id + t.dateStr} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
                     <span className="text-xs text-[#8a9d8c] w-14 shrink-0">{fmtDate(t.dateStr)}</span>
                     <span className="text-sm text-[#38513e] flex-grow min-w-0 truncate">{t.text}</span>
-                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => updateTask(t.dateStr, t.id, { completed: true })}
                         title="Закрыть задачу"
                         className="p-1.5 text-[#8a9d8c] hover:text-[#4a6b4a] hover:bg-[#eef3ee] rounded-full transition-colors">
@@ -1427,7 +1427,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                   <input value={g.text}
                     onChange={e => saveReview({ ...monthlyReview, goals: monthlyReview.goals.map(x => x.id === g.id ? { ...x, text: e.target.value } : x) })}
                     className={`flex-grow bg-transparent text-sm focus:outline-none ${g.done ? 'line-through text-[#a9bcac]' : 'text-[#38513e]'}`} />
-                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button onClick={() => addTextToImportant(g.text)}
                       title="Создать «Важную задачу»"
                       className="px-2 py-1 text-[10px] text-[#4a6b4a] hover:bg-[#eef3ee] rounded-full transition-colors">
@@ -1476,7 +1476,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                     onChange={e => saveReview({ ...monthlyReview, ideas: monthlyReview.ideas.map(x => x.id === idea.id ? { ...x, text: e.target.value } : x) })}
                     className="flex-grow bg-transparent text-sm text-[#38513e] focus:outline-none" />
                   <button onClick={() => saveReview({ ...monthlyReview, ideas: monthlyReview.ideas.filter(x => x.id !== idea.id) })}
-                    className="p-1.5 text-[#a9bcac] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    className="p-1.5 text-[#a9bcac] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -1562,52 +1562,51 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           </div>
         </div>
 
-        {/* Переключатель + навигация */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-5 gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Выпадающий список: День / Неделя / Месяц */}
-            <div className="relative">
-              <button onClick={() => setShowViewDropdown(v => !v)}
-                className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-sm font-medium rounded-full border transition-all ${
-                  ['day', 'week', 'month'].includes(view)
-                    ? 'bg-[#38513e] text-white border-[#38513e]'
-                    : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
-                }`}>
-                {{ day: 'День', week: 'Неделя', month: 'Месяц' }[calView] || 'День'}
-                <ChevronDown size={15} className={`transition-transform ${showViewDropdown ? 'rotate-180' : ''}`} />
-              </button>
-              {showViewDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-[#e3ebe3] rounded-xl shadow-md z-50 min-w-[140px] py-1"
-                  onMouseLeave={() => setShowViewDropdown(false)}>
-                  {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }].map(o => (
-                    <button key={o.id} onClick={() => { setView(o.id); setCalView(o.id); setShowViewDropdown(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#eef3ee] transition-colors ${view === o.id ? 'text-[#38513e] font-medium' : 'text-[#5a7a5a]'}`}>
-                      {o.label}
-                      {view === o.id && <Check size={12} className="ml-auto" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Просроченные */}
-            <button onClick={() => setView(view === 'overdue' ? calView : 'overdue')}
-              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                view === 'overdue'
-                  ? 'bg-[#9a3d3d] text-white border-[#9a3d3d]'
-                  : 'bg-white text-[#9a3d3d] border-[#e3ebe3] hover:border-[#d99b9b]'
-              }`}>
-              Просроченные
-            </button>
-            {/* Важные задачи */}
-            <button onClick={() => setView(view === 'important' ? calView : 'important')}
-              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                view === 'important'
+        {/* Переключатель */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center gap-2 mb-5">
+          {/* Выпадающий список: День / Неделя / Месяц */}
+          <div className="relative">
+            <button onClick={() => setShowViewDropdown(v => !v)}
+              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-5 py-2 text-sm font-medium rounded-full border transition-all ${
+                ['day', 'week', 'month'].includes(view)
                   ? 'bg-[#38513e] text-white border-[#38513e]'
                   : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
               }`}>
-              Важные задачи
+              {{ day: 'День', week: 'Неделя', month: 'Месяц' }[calView] || 'День'}
+              <ChevronDown size={15} className={`transition-transform ${showViewDropdown ? 'rotate-180' : ''}`} />
             </button>
+            {showViewDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-[#e3ebe3] rounded-xl shadow-md z-50 min-w-[140px] py-1"
+                onMouseLeave={() => setShowViewDropdown(false)}>
+                {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }].map(o => (
+                  <button key={o.id} onClick={() => { setView(o.id); setCalView(o.id); setShowViewDropdown(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#eef3ee] transition-colors ${view === o.id ? 'text-[#38513e] font-medium' : 'text-[#5a7a5a]'}`}>
+                    {o.label}
+                    {view === o.id && <Check size={12} className="ml-auto" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+          {/* Просроченные */}
+          <button onClick={() => setView(view === 'overdue' ? calView : 'overdue')}
+            className={`w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+              view === 'overdue'
+                ? 'bg-[#9a3d3d] text-white border-[#9a3d3d]'
+                : 'bg-white text-[#9a3d3d] border-[#e3ebe3] hover:border-[#d99b9b]'
+            }`}>
+            Просроченные
+          </button>
+          {/* Важные задачи */}
+          <button onClick={() => setView(view === 'important' ? calView : 'important')}
+            className={`w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+              view === 'important'
+                ? 'bg-[#38513e] text-white border-[#38513e]'
+                : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
+            }`}>
+            Важные задачи
+          </button>
+          {/* Итоги */}
           {(() => {
             const today = new Date();
             const daysInMon = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
@@ -1616,7 +1615,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             return (
               <button onClick={() => setView(active ? calView : 'summary')}
                 title={isMonthEnd ? 'Пора подвести итоги!' : 'Итоги месяца'}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all self-end sm:self-auto ${
+                className={`w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all ${
                   active
                     ? 'bg-[#38513e] text-white border-[#38513e]'
                     : isMonthEnd
