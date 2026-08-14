@@ -364,6 +364,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [isListening, setIsListening] = useState(false);
   const newTaskInputRef = useRef(null);
   const [showPlannerDropdown, setShowPlannerDropdown] = useState(false);
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
+  const [calView, setCalView] = useState('day'); // последний выбранный вид календаря
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [importantTasks, setImportantTasks] = useState([]);
   const importantDebounce = useRef(null);
@@ -529,6 +531,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
   // Ключ месяца ГГГГ-ММ для обзора
   const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+  // Сегодняшний ключ даты (для определения просрочки) — на базе того же formatDate
+  const todayStr = formatDate(new Date());
 
   // Загрузка обзора месяца (цели/идеи)
   useEffect(() => {
@@ -778,11 +782,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           {dayTasks.map((task, i) => {
             const isEditing = editingId === task.id;
             const isNoteOpen = expandedNoteId === task.id;
+            const isOverdue = !task.completed && dateStr < todayStr;
+            const rowBg = task.completed
+              ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]'
+              : isOverdue
+                ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]'
+                : 'hover:bg-[#f4f7f4]';
 
             return (
               <div key={task.id} className="border-b border-[#eef3ee]">
                 {/* Строка задачи */}
-                <div className="group flex items-center min-h-[44px] hover:bg-[#f4f7f4] px-3 sm:px-8 md:px-16 text-sm text-[#38513e] relative">
+                <div className={`group flex items-center min-h-[44px] ${rowBg} px-3 sm:px-8 md:px-16 text-sm text-[#38513e] relative transition-colors`}>
                   <span className="mr-3 text-[#b0c3b2] text-xs w-5 shrink-0">{i + 1}</span>
 
                   {isEditing ? (
@@ -830,9 +840,19 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                               else moveToNextDay(task, dateStr);
                               setConfirmAction(null);
                             }}
+                            title={confirmAction.type === 'move' ? 'На следующий день' : undefined}
                             className={`px-2 py-1 text-xs rounded transition-colors text-white ${confirmAction.type === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#38513e] hover:bg-[#2a3d2f]'}`}>
                             Да
                           </button>
+                          {confirmAction.type === 'move' && (
+                            <label title="Выбрать дату переноса"
+                              className="px-2 py-1 text-xs rounded bg-[#eef3ee] text-[#38513e] hover:bg-[#e3ebe3] transition-colors cursor-pointer relative">
+                              Выбрать дату
+                              <input type="date"
+                                onChange={e => { moveTaskToDate(dateStr, task, e.target.value); setConfirmAction(null); }}
+                                className="absolute inset-0 opacity-0 cursor-pointer" />
+                            </label>
+                          )}
                           <button onClick={() => setConfirmAction(null)}
                             className="px-2 py-1 text-xs text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded transition-colors">
                             Нет
@@ -968,7 +988,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               </div>
               <div className="space-y-1">
                 {dayTasks.slice(0, 5).map((t, idx) => (
-                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 bg-[#eef3ee] text-[#38513e] ${t.completed ? 'line-through opacity-50' : ''}`}>
+                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && dStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
                     {t.text}
                   </div>
                 ))}
@@ -1025,7 +1045,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                     </span>
                     <div className="mt-0.5 space-y-0.5">
                       {dayTasks.slice(0, 2).map((t, idx) => (
-                        <div key={idx} className={`hidden sm:block text-[9px] px-1 rounded truncate bg-[#eef3ee] text-[#38513e] ${t.completed ? 'opacity-40' : ''}`}>
+                        <div key={idx} className={`hidden sm:block text-[9px] px-1 rounded truncate ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && dStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
                           {t.text}
                         </div>
                       ))}
@@ -1068,10 +1088,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         <div className="divide-y divide-[#eef3ee] p-2 sm:p-3">
-          {importantTasks.slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0)).map((task) => (
+          {importantTasks.slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0)).map((task) => {
+            const impOverdue = !task.completed && task.deadline && task.deadline < todayStr;
+            const impBg = task.completed
+              ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]'
+              : impOverdue
+                ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]'
+                : 'hover:bg-[#f4f7f4]';
+            return (
             <div key={task.id} className="group">
               {/* Основная строка */}
-              <div className="flex items-start gap-3 px-3 sm:px-5 py-3 rounded-2xl hover:bg-[#f4f7f4] transition-colors">
+              <div className={`flex items-start gap-3 px-3 sm:px-5 py-3 rounded-2xl ${impBg} transition-colors`}>
                 <input type="checkbox" checked={task.completed}
                   onChange={() => updateImportant(task.id, { completed: !task.completed })}
                   className="mt-0.5 w-4 h-4 cursor-pointer accent-[#4a6b4a] shrink-0" />
@@ -1137,7 +1164,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Строка добавления */}
@@ -1148,6 +1176,63 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             placeholder="Добавить важную задачу..."
             onKeyDown={e => { if (e.key === 'Enter') { addImportant(e.target.value); e.target.value = ''; } }}
           />
+        </div>
+      </div>
+    );
+  };
+
+  // --- ПРОСРОЧЕННЫЕ ЗАДАЧИ ---
+  const renderOverdueView = () => {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() - 30);
+    const minStr = formatDate(minDate);
+    const overdueTasks = Object.entries(tasks)
+      .filter(([dStr]) => dStr < todayStr && dStr >= minStr)
+      .flatMap(([dStr, arr]) => (arr || []).filter(t => !t.completed).map(t => ({ ...t, dateStr: dStr })))
+      .sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+    const fmtDate = (dStr) => new Date(dStr + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+
+    return (
+      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+        <div className="px-5 sm:px-8 py-5 bg-[#9a3d3d]">
+          <h2 className="text-base font-semibold text-white">Просроченные задачи</h2>
+          <p className="text-xs text-[#e8c4c4] mt-0.5">Невыполненные задачи за последние 30 дней · {overdueTasks.length}</p>
+        </div>
+        <div className="p-3 sm:p-5">
+          {overdueTasks.length === 0 ? (
+            <p className="text-sm text-[#a9bcac] px-2 py-6 text-center">Просроченных задач нет 🎉</p>
+          ) : (
+            <div className="space-y-1">
+              {overdueTasks.map(t => (
+                <div key={t.id + t.dateStr} className="group flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#fbe0e0] hover:bg-[#f6d2d2] transition-colors">
+                  <span className="text-xs text-[#9a3d3d] font-medium w-14 shrink-0">{fmtDate(t.dateStr)}</span>
+                  <span className="text-sm text-[#38513e] flex-grow min-w-0 truncate">{t.text}</span>
+                  {(t.tags || []).slice(0, 2).map(tag => (
+                    <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/60 text-[#8a9d8c] rounded shrink-0 hidden sm:inline">#{tag}</span>
+                  ))}
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => updateTask(t.dateStr, t.id, { completed: true })}
+                      title="Закрыть задачу"
+                      className="p-1.5 text-[#8a9d8c] hover:text-[#4a6b4a] hover:bg-white/70 rounded-full transition-colors">
+                      <Check size={14} />
+                    </button>
+                    <button onClick={() => moveTaskToImportant(t.dateStr, t)}
+                      title="Перенести в «Важные задачи»"
+                      className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors">
+                      <ArrowRight size={14} />
+                    </button>
+                    <label title="Перенести на дату"
+                      className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors cursor-pointer relative">
+                      <Calendar size={14} />
+                      <input type="date"
+                        onChange={e => moveTaskToDate(t.dateStr, t, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer" />
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1479,13 +1564,49 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
         {/* Переключатель + навигация */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-5 gap-3">
-          <div className="flex bg-white border border-[#e3ebe3] rounded-full p-1 gap-1">
-            {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }, { id: 'important', label: 'Важные задачи' }].map(btn => (
-              <button key={btn.id} onClick={() => setView(btn.id)}
-                className={`px-4 sm:px-6 py-2 text-sm font-medium rounded-full transition-all ${view === btn.id ? 'bg-[#38513e] text-white' : 'text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee]'}`}>
-                {btn.label}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Выпадающий список: День / Неделя / Месяц */}
+            <div className="relative">
+              <button onClick={() => setShowViewDropdown(v => !v)}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-sm font-medium rounded-full border transition-all ${
+                  ['day', 'week', 'month'].includes(view)
+                    ? 'bg-[#38513e] text-white border-[#38513e]'
+                    : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
+                }`}>
+                {{ day: 'День', week: 'Неделя', month: 'Месяц' }[calView] || 'День'}
+                <ChevronDown size={15} className={`transition-transform ${showViewDropdown ? 'rotate-180' : ''}`} />
               </button>
-            ))}
+              {showViewDropdown && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-[#e3ebe3] rounded-xl shadow-md z-50 min-w-[140px] py-1"
+                  onMouseLeave={() => setShowViewDropdown(false)}>
+                  {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }].map(o => (
+                    <button key={o.id} onClick={() => { setView(o.id); setCalView(o.id); setShowViewDropdown(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#eef3ee] transition-colors ${view === o.id ? 'text-[#38513e] font-medium' : 'text-[#5a7a5a]'}`}>
+                      {o.label}
+                      {view === o.id && <Check size={12} className="ml-auto" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Просроченные */}
+            <button onClick={() => setView(view === 'overdue' ? calView : 'overdue')}
+              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+                view === 'overdue'
+                  ? 'bg-[#9a3d3d] text-white border-[#9a3d3d]'
+                  : 'bg-white text-[#9a3d3d] border-[#e3ebe3] hover:border-[#d99b9b]'
+              }`}>
+              Просроченные
+            </button>
+            {/* Важные задачи */}
+            <button onClick={() => setView(view === 'important' ? calView : 'important')}
+              className={`px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+                view === 'important'
+                  ? 'bg-[#38513e] text-white border-[#38513e]'
+                  : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
+              }`}>
+              Важные задачи
+            </button>
           </div>
           {(() => {
             const today = new Date();
@@ -1493,7 +1614,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             const isMonthEnd = daysInMon - today.getDate() <= 2; // последние 3 дня месяца
             const active = view === 'summary';
             return (
-              <button onClick={() => setView(active ? 'day' : 'summary')}
+              <button onClick={() => setView(active ? calView : 'summary')}
                 title={isMonthEnd ? 'Пора подвести итоги!' : 'Итоги месяца'}
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all self-end sm:self-auto ${
                   active
@@ -1514,6 +1635,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         {view === 'week' && renderWeekView()}
         {view === 'month' && renderMonthView()}
         {view === 'important' && renderImportantView()}
+        {view === 'overdue' && renderOverdueView()}
         {view === 'summary' && renderSummaryView()}
       </div>
     </div>
