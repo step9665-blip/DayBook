@@ -512,6 +512,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     const newDate = new Date(currentDate);
     if (view === 'day') newDate.setDate(newDate.getDate() + amount);
     if (view === 'week') newDate.setDate(newDate.getDate() + amount * 7);
+    if (view === 'weekend') newDate.setDate(newDate.getDate() + amount * 7);
     if (view === 'month') newDate.setMonth(newDate.getMonth() + amount);
     if (view === 'summary') newDate.setMonth(newDate.getMonth() + amount);
     setCurrentDate(newDate);
@@ -973,7 +974,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </button>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5">
-        {[...Array(7)].map((_, i) => {
+        {[...Array(5)].map((_, i) => {
           const d = new Date(startOfWeek);
           d.setDate(startOfWeek.getDate() + i);
           const dStr = formatDate(d);
@@ -997,7 +998,151 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             </div>
           );
         })}
+
+        {/* Итоги недели */}
+        {(() => {
+          const weekTasks = [];
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(startOfWeek);
+            d.setDate(startOfWeek.getDate() + i);
+            const dStr = formatDate(d);
+            getFilteredTasks(tasks[dStr] || []).forEach(t => weekTasks.push({ ...t, dateStr: dStr }));
+          }
+          const wTotal = weekTasks.length;
+          const wDone = weekTasks.filter(t => t.completed).length;
+          const sorted = weekTasks.slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
+          return (
+            <div className="bg-[#f4f7f4] rounded-lg border border-[#d7e3d7] p-2.5 sm:p-3 min-h-[120px]">
+              <div className="text-xs font-semibold mb-2 pb-1.5 border-b border-[#e3ebe3] text-[#38513e] flex items-center gap-1">
+                <BarChart3 size={11} /> Итоги недели
+              </div>
+              <p className="text-[11px] text-[#5a7a5a] mb-1.5">Выполнено {wDone} из {wTotal}</p>
+              <div className="space-y-1 max-h-[160px] overflow-y-auto">
+                {sorted.map((t, idx) => (
+                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && t.dateStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
+                    {t.text}
+                  </div>
+                ))}
+                {wTotal === 0 && <p className="text-[10px] text-[#a9bcac]">Нет задач</p>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Выходные (Сб + Вс) */}
+        {(() => {
+          const sat = new Date(startOfWeek); sat.setDate(startOfWeek.getDate() + 5);
+          const sun = new Date(startOfWeek); sun.setDate(startOfWeek.getDate() + 6);
+          const satStr = formatDate(sat), sunStr = formatDate(sun);
+          const wkTasks = [
+            ...getFilteredTasks(tasks[satStr] || []).map(t => ({ ...t, dateStr: satStr })),
+            ...getFilteredTasks(tasks[sunStr] || []).map(t => ({ ...t, dateStr: sunStr })),
+          ].sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
+          const todayS = formatDate(new Date());
+          const isToday = satStr === todayS || sunStr === todayS;
+          return (
+            <div onClick={() => { setCurrentDate(sat); setView('weekend'); }}
+              className={`bg-white rounded-lg border transition-all cursor-pointer p-2.5 sm:p-3 min-h-[120px] hover:border-[#b0c3b2] ${isToday ? 'border-[#38513e]' : 'border-[#e3ebe3]'}`}>
+              <div className={`text-xs font-semibold mb-2 pb-1.5 border-b border-[#eef3ee] ${isToday ? 'text-[#38513e]' : 'text-[#8a9d8c]'}`}>
+                Сб-Вс · {sat.getDate()}-{sun.getDate()}
+              </div>
+              <div className="space-y-1">
+                {wkTasks.slice(0, 5).map((t, idx) => (
+                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && t.dateStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
+                    {t.text}
+                  </div>
+                ))}
+                {wkTasks.length > 5 && <div className="text-[10px] text-[#8a9d8c]">+{wkTasks.length - 5}</div>}
+              </div>
+            </div>
+          );
+        })()}
       </div>
+      </div>
+    );
+  };
+
+  // --- ВЫХОДНЫЕ (Сб + Вс) ---
+  const renderWeekendView = () => {
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(startOfWeek.getDate() - getDayOfWeek(startOfWeek));
+    const sat = new Date(startOfWeek); sat.setDate(startOfWeek.getDate() + 5);
+    const sun = new Date(startOfWeek); sun.setDate(startOfWeek.getDate() + 6);
+    const weekendLabel = `${sat.toLocaleDateString('ru-RU', { day: 'numeric' })}—${sun.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}`;
+
+    const renderDaySection = (dateObj) => {
+      const dStr = formatDate(dateObj);
+      const dayTasks = getFilteredTasks(tasks[dStr] || []).slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
+      const weekday = dateObj.toLocaleDateString('ru-RU', { weekday: 'long' });
+      const dateLabel = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+      return (
+        <div className="flex-1 min-w-0">
+          <div className="px-4 sm:px-6 py-3 border-b border-[#e3ebe3] flex items-baseline gap-2">
+            <span className="text-base font-semibold text-[#38513e] capitalize">{weekday}</span>
+            <span className="text-xs text-[#8a9d8c]">{dateLabel}</span>
+          </div>
+          <div className="p-2 sm:p-3">
+            <div className="space-y-0.5">
+              {dayTasks.map(task => {
+                const isOverdue = !task.completed && dStr < todayStr;
+                const rowBg = task.completed ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]' : isOverdue ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]' : 'hover:bg-[#f4f7f4]';
+                return (
+                  <div key={task.id} className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors ${rowBg}`}>
+                    <input type="checkbox" checked={task.completed}
+                      onChange={() => updateTask(dStr, task.id, { completed: !task.completed })}
+                      className="w-4 h-4 cursor-pointer accent-[#38513e] shrink-0" />
+                    <input type="text" value={task.text}
+                      onChange={e => updateTask(dStr, task.id, { text: e.target.value })}
+                      className={`flex-grow bg-transparent text-sm focus:outline-none min-w-0 ${task.completed ? 'line-through text-[#b0c3b2]' : 'text-[#38513e]'}`} />
+                    {(task.tags || []).map(tag => (
+                      <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#eef3ee] text-[#8a9d8c] rounded shrink-0 hidden sm:inline">#{tag}</span>
+                    ))}
+                    <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => moveToNextDay(task, dStr)}
+                        title="Перенести на следующий день"
+                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors">
+                        <ArrowRight size={13} />
+                      </button>
+                      <button onClick={() => openInCalendar(task, dStr)}
+                        title="В Google Календарь"
+                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors">
+                        <Calendar size={13} />
+                      </button>
+                      <button onClick={() => deleteTask(dStr, task.id)}
+                        className="p-1.5 text-[#8a9d8c] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-2.5 px-3 py-2 mt-0.5 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
+              <Plus size={15} className="text-[#6b8e6b] shrink-0" />
+              <input className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
+                placeholder="Добавить задачу..."
+                onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) { addTask(dStr, e.target.value); e.target.value = ''; } }} />
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-sm font-semibold text-[#38513e] min-w-[130px] text-center">Выходные · {weekendLabel}</span>
+          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-[#e3ebe3]">
+          {renderDaySection(sat)}
+          {renderDaySection(sun)}
+        </div>
       </div>
     );
   };
@@ -1568,7 +1713,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           <div className="relative">
             <button onClick={() => setShowViewDropdown(v => !v)}
               className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-5 py-2 text-sm font-medium rounded-full border transition-all ${
-                ['day', 'week', 'month'].includes(view)
+                ['day', 'week', 'weekend', 'month'].includes(view)
                   ? 'bg-[#38513e] text-white border-[#38513e]'
                   : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
               }`}>
@@ -1632,6 +1777,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
         {view === 'day' && renderDayView()}
         {view === 'week' && renderWeekView()}
+        {view === 'weekend' && renderWeekendView()}
         {view === 'month' && renderMonthView()}
         {view === 'important' && renderImportantView()}
         {view === 'overdue' && renderOverdueView()}
