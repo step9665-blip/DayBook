@@ -350,6 +350,7 @@ const HomeView = ({
 const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectPlanner, onBack, onNewPlanner, onUpdateRecurring, user, onSignOut }) => {
   const [view, setView] = useState('day');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [dayStage, setDayStage] = useState('day'); // 'day' | 'summary' | 'weekend' — стадия в дневном листании
   const [tasks, setTasks] = useState({});
   const [dayNotes, setDayNotes] = useState({});
   const [editingId, setEditingId] = useState(null);
@@ -508,9 +509,46 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     setEditingId(null); setEditingText('');
   };
 
+  // Понедельник недели для заданной даты
+  const mondayOf = (date) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() - getDayOfWeek(d));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  // Слот дневного листания: 0-4 = Пн-Пт, 5 = итоги недели, 6 = выходные (Сб-Вс)
+  const getDaySlot = () => {
+    if (dayStage === 'summary') return 5;
+    if (dayStage === 'weekend') return 6;
+    const dow = getDayOfWeek(currentDate);
+    return dow >= 5 ? 6 : dow;
+  };
+
+  const applyDaySlot = (weekStart, slot) => {
+    if (slot <= 4) {
+      const d = new Date(weekStart); d.setDate(weekStart.getDate() + slot);
+      setCurrentDate(d); setDayStage('day');
+    } else if (slot === 5) {
+      setCurrentDate(new Date(weekStart)); setDayStage('summary');
+    } else {
+      const sat = new Date(weekStart); sat.setDate(weekStart.getDate() + 5);
+      setCurrentDate(sat); setDayStage('weekend');
+    }
+  };
+
   const navigate = (amount) => {
+    if (view === 'day') {
+      const weekStart = mondayOf(currentDate);
+      let slot = getDaySlot() + amount;
+      const newWeekStart = new Date(weekStart);
+      while (slot > 6) { slot -= 7; newWeekStart.setDate(newWeekStart.getDate() + 7); }
+      while (slot < 0) { slot += 7; newWeekStart.setDate(newWeekStart.getDate() - 7); }
+      applyDaySlot(newWeekStart, slot);
+      setExtraLines(0);
+      return;
+    }
     const newDate = new Date(currentDate);
-    if (view === 'day') newDate.setDate(newDate.getDate() + amount);
     if (view === 'week') newDate.setDate(newDate.getDate() + amount * 7);
     if (view === 'weekend') newDate.setDate(newDate.getDate() + amount * 7);
     if (view === 'month') newDate.setMonth(newDate.getMonth() + amount);
@@ -982,7 +1020,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           const dayTasks = getFilteredTasks(tasks[dStr] || []).slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
 
           return (
-            <div key={i} onClick={() => { setCurrentDate(d); setView('day'); }}
+            <div key={i} onClick={() => { setCurrentDate(d); setDayStage('day'); setView('day'); }}
               className={`bg-white rounded-lg border transition-all cursor-pointer p-2.5 sm:p-3 min-h-[120px] hover:border-[#b0c3b2] ${isToday ? 'border-[#38513e]' : 'border-[#e3ebe3]'}`}>
               <div className={`text-xs font-semibold mb-2 pb-1.5 border-b border-[#eef3ee] ${isToday ? 'text-[#38513e]' : 'text-[#8a9d8c]'}`}>
                 {d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })}
@@ -1147,6 +1185,86 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     );
   };
 
+  // --- ИТОГИ НЕДЕЛИ (экран в дневном листании) ---
+  const renderWeekSummaryView = () => {
+    const weekStart = mondayOf(currentDate);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+    const label = `${weekStart.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} — ${weekEnd.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}`;
+    const weekTasks = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+      const dStr = formatDate(d);
+      getFilteredTasks(tasks[dStr] || []).forEach(t => weekTasks.push({ ...t, dateStr: dStr }));
+    }
+    const total = weekTasks.length;
+    const done = weekTasks.filter(t => t.completed).length;
+    const notDone = total - done;
+    const percent = total ? Math.round((done / total) * 100) : 0;
+    const sorted = weekTasks.slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0) || a.dateStr.localeCompare(b.dateStr));
+    const fmt = (dStr) => new Date(dStr + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' });
+
+    return (
+      <div>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-sm font-semibold text-[#38513e] min-w-[150px] text-center">Итоги недели · {label}</span>
+          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 bg-[#38513e]">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2"><BarChart3 size={16} /> Итоги недели</h2>
+            <p className="text-xs text-[#b8c9ba] mt-0.5">Все задачи недели — выполненные и невыполненные</p>
+          </div>
+          {/* Статистика */}
+          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3]">
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              {[
+                { label: 'Всего', value: total, color: '#38513e' },
+                { label: 'Выполнено', value: done, color: '#4a6b4a' },
+                { label: 'Осталось', value: notDone, color: '#9a3d3d' },
+              ].map(kpi => (
+                <div key={kpi.label} className="text-center">
+                  <p className="text-2xl font-semibold" style={{ color: kpi.color }}>{kpi.value}</p>
+                  <p className="text-xs text-[#8a9d8c]">{kpi.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="h-2.5 bg-[#eef3ee] rounded-full overflow-hidden">
+              <div className="h-full bg-[#4a6b4a] rounded-full transition-all" style={{ width: `${percent}%` }} />
+            </div>
+            <p className="text-xs text-[#8a9d8c] mt-1.5 text-center">Выполнено {percent}%</p>
+          </div>
+          {/* Список задач */}
+          <div className="p-3 sm:p-5">
+            {total === 0 ? (
+              <p className="text-sm text-[#a9bcac] px-2 py-6 text-center">За неделю задач не было</p>
+            ) : (
+              <div className="space-y-1">
+                {sorted.map(t => {
+                  const isOverdue = !t.completed && t.dateStr < todayStr;
+                  const rowBg = t.completed ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]' : isOverdue ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]' : 'hover:bg-[#f4f7f4]';
+                  return (
+                    <div key={t.id + t.dateStr} className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${rowBg}`}>
+                      <input type="checkbox" checked={t.completed}
+                        onChange={() => updateTask(t.dateStr, t.id, { completed: !t.completed })}
+                        className="w-4 h-4 cursor-pointer accent-[#38513e] shrink-0" />
+                      <span className={`text-sm flex-grow min-w-0 truncate ${t.completed ? 'line-through text-[#b0c3b2]' : 'text-[#38513e]'}`}>{t.text}</span>
+                      <span className="text-xs text-[#8a9d8c] shrink-0 capitalize">{fmt(t.dateStr)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // --- МЕСЯЦ ---
   const renderMonthView = () => {
     const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -1181,7 +1299,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             const isToday = dStr === formatDate(new Date());
 
             return (
-              <div key={i} onClick={() => isValidDay && (setCurrentDate(dayDate), setView('day'))}
+              <div key={i} onClick={() => isValidDay && (setCurrentDate(dayDate), setDayStage('day'), setView('day'))}
                 className={`h-14 sm:h-24 md:h-28 border-b border-r border-[#eef3ee] p-1 sm:p-1.5 transition-colors ${isValidDay ? 'cursor-pointer hover:bg-[#f4f7f4]' : 'bg-[#f4f7f4]'}`}>
                 {isValidDay && (
                   <>
@@ -1724,7 +1842,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               <div className="absolute top-full left-0 mt-1 bg-white border border-[#e3ebe3] rounded-xl shadow-md z-50 min-w-[140px] py-1"
                 onMouseLeave={() => setShowViewDropdown(false)}>
                 {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }].map(o => (
-                  <button key={o.id} onClick={() => { setView(o.id); setCalView(o.id); setShowViewDropdown(false); }}
+                  <button key={o.id} onClick={() => { setView(o.id); setCalView(o.id); setDayStage('day'); setShowViewDropdown(false); }}
                     className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#eef3ee] transition-colors ${view === o.id ? 'text-[#38513e] font-medium' : 'text-[#5a7a5a]'}`}>
                     {o.label}
                     {view === o.id && <Check size={12} className="ml-auto" />}
@@ -1775,7 +1893,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           })()}
         </div>
 
-        {view === 'day' && renderDayView()}
+        {view === 'day' && (getDaySlot() === 5 ? renderWeekSummaryView() : getDaySlot() === 6 ? renderWeekendView() : renderDayView())}
         {view === 'week' && renderWeekView()}
         {view === 'weekend' && renderWeekendView()}
         {view === 'month' && renderMonthView()}
