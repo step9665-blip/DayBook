@@ -517,12 +517,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     return d;
   };
 
-  // Слот дневного листания: 0-4 = Пн-Пт, 5 = итоги недели, 6 = выходные (Сб-Вс)
+  // Слот дневного листания: 0-4 = Пн-Пт, 5 = выходные (Сб-Вс), 6 = итоги недели
   const getDaySlot = () => {
-    if (dayStage === 'summary') return 5;
-    if (dayStage === 'weekend') return 6;
+    if (dayStage === 'weekend') return 5;
+    if (dayStage === 'summary') return 6;
     const dow = getDayOfWeek(currentDate);
-    return dow >= 5 ? 6 : dow;
+    return dow >= 5 ? 5 : dow;
   };
 
   const applyDaySlot = (weekStart, slot) => {
@@ -530,10 +530,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       const d = new Date(weekStart); d.setDate(weekStart.getDate() + slot);
       setCurrentDate(d); setDayStage('day');
     } else if (slot === 5) {
-      setCurrentDate(new Date(weekStart)); setDayStage('summary');
-    } else {
       const sat = new Date(weekStart); sat.setDate(weekStart.getDate() + 5);
       setCurrentDate(sat); setDayStage('weekend');
+    } else {
+      setCurrentDate(new Date(weekStart)); setDayStage('summary');
     }
   };
 
@@ -1167,17 +1167,22 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     };
 
     return (
-      <div>
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
-            <ChevronLeft size={18} />
-          </button>
-          <span className="text-sm font-semibold text-[#38513e] min-w-[130px] text-center">Выходные · {weekendLabel}</span>
-          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
-            <ChevronRight size={18} />
-          </button>
+      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+        <div className="px-4 sm:px-8 py-4 flex justify-end items-center border-b border-[#e3ebe3]">
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+              <ChevronLeft size={18} />
+            </button>
+            <div className="text-center min-w-[130px]">
+              <p className="text-base font-semibold text-[#38513e]">Выходные</p>
+              <p className="text-xs text-[#8a9d8c]">{weekendLabel}</p>
+            </div>
+            <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
-        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-[#e3ebe3]">
+        <div className="flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-[#e3ebe3]">
           {renderDaySection(sat)}
           {renderDaySection(sun)}
         </div>
@@ -1205,19 +1210,21 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
     return (
       <div>
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
-            <ChevronLeft size={18} />
-          </button>
-          <span className="text-sm font-semibold text-[#38513e] min-w-[150px] text-center">Итоги недели · {label}</span>
-          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
-            <ChevronRight size={18} />
-          </button>
-        </div>
         <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 bg-[#38513e]">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2"><BarChart3 size={16} /> Итоги недели</h2>
-            <p className="text-xs text-[#b8c9ba] mt-0.5">Все задачи недели — выполненные и невыполненные</p>
+          <div className="px-5 sm:px-8 py-4 bg-[#38513e] flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2"><BarChart3 size={16} /> Итоги недели</h2>
+              <p className="text-xs text-[#b8c9ba] mt-0.5">Все задачи недели — выполненные и невыполненные</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => navigate(-1)} className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                <ChevronLeft size={18} />
+              </button>
+              <span className="text-xs text-white/90 min-w-[110px] text-center">{label}</span>
+              <button onClick={() => navigate(1)} className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
           {/* Статистика */}
           <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3]">
@@ -1893,7 +1900,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           })()}
         </div>
 
-        {view === 'day' && (getDaySlot() === 5 ? renderWeekSummaryView() : getDaySlot() === 6 ? renderWeekendView() : renderDayView())}
+        {view === 'day' && (getDaySlot() === 5 ? renderWeekendView() : getDaySlot() === 6 ? renderWeekSummaryView() : renderDayView())}
         {view === 'week' && renderWeekView()}
         {view === 'weekend' && renderWeekendView()}
         {view === 'month' && renderMonthView()}
