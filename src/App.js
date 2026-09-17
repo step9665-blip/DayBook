@@ -1101,9 +1101,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                       <textarea
                         value={task.notes || ''}
                         onChange={e => updateTask(dateStr, task.id, { notes: e.target.value })}
+                        ref={el => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                        onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
                         placeholder="Добавить заметку к задаче..."
-                        rows={3}
-                        className="w-full bg-transparent text-xs text-[#38513e] placeholder-[#b0c3b2] focus:outline-none resize-none py-2 leading-relaxed"
+                        rows={1}
+                        className="w-full bg-transparent text-xs text-[#38513e] placeholder-[#b0c3b2] focus:outline-none resize-none py-2 leading-relaxed overflow-hidden"
                         autoFocus
                       />
                       {/* Подзадачи */}
