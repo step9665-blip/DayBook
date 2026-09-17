@@ -1106,6 +1106,34 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                         className="w-full bg-transparent text-xs text-[#38513e] placeholder-[#b0c3b2] focus:outline-none resize-none py-2 leading-relaxed"
                         autoFocus
                       />
+                      {/* Подзадачи */}
+                      <div className="mt-1 pt-2 border-t border-[#e3ebe3]">
+                        <p className="text-[10px] font-medium text-[#8a9d8c] uppercase tracking-wider mb-1.5">Подзадачи</p>
+                        <div className="space-y-1">
+                          {(task.subtasks || []).map(st => (
+                            <div key={st.id} className="group/sub flex items-center gap-2">
+                              <input type="checkbox" checked={st.done}
+                                onChange={() => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).map(s => s.id === st.id ? { ...s, done: !s.done } : s) })}
+                                className="w-3.5 h-3.5 accent-[#4a6b4a] cursor-pointer shrink-0" />
+                              <input value={st.text}
+                                onChange={e => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).map(s => s.id === st.id ? { ...s, text: e.target.value } : s) })}
+                                className={`flex-grow bg-transparent text-xs focus:outline-none min-w-0 ${st.done ? 'line-through text-[#b0c3b2]' : 'text-[#38513e]'}`} />
+                              <button onClick={() => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).filter(s => s.id !== st.id) })}
+                                className="p-1 text-[#b0c3b2] hover:text-red-500 hover:bg-red-50 rounded shrink-0 opacity-100 sm:opacity-0 sm:group-hover/sub:opacity-100 transition-opacity">
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-2">
+                            <Plus size={12} className="text-[#6b8e6b] shrink-0" />
+                            <input
+                              placeholder="Добавить подзадачу..."
+                              onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) { updateTask(dateStr, task.id, { subtasks: [...(task.subtasks || []), { id: generateId(), text: e.target.value.trim(), done: false }] }); e.target.value = ''; } }}
+                              className="flex-grow bg-transparent text-xs text-[#38513e] placeholder-[#b0c3b2] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
