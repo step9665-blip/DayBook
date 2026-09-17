@@ -1051,11 +1051,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                           </button>
                           {confirmAction.type === 'move' && (
                             <label title="Выбрать дату переноса"
+                              onClick={e => { const inp = e.currentTarget.querySelector('input'); try { inp.showPicker(); } catch (_) {} }}
                               className="px-2 py-1 text-xs rounded bg-[#eef3ee] text-[#38513e] hover:bg-[#e3ebe3] transition-colors cursor-pointer relative">
                               Выбрать дату
                               <input type="date"
                                 onChange={e => { moveTaskToDate(dateStr, task, e.target.value); setConfirmAction(null); }}
-                                className="absolute inset-0 opacity-0 cursor-pointer" />
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                             </label>
                           )}
                           <button onClick={() => setConfirmAction(null)}
