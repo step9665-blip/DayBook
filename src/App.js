@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs, getDoc } from 'firebase/firestore';
@@ -75,6 +75,125 @@ const LoginScreen = () => {
           Войти через Google
         </button>
       </div>
+    </div>
+  );
+};
+
+// === NOTE EDITOR (rich text) ===
+const NoteEditor = ({ note, onChangeTitle, onChangeContent, onBack, onDelete }) => {
+  const editorRef = useRef(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Загружаем содержимое при открытии / смене заметки
+  useEffect(() => {
+    if (editorRef.current) editorRef.current.innerHTML = note.content || '';
+  }, [note.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const save = () => { if (editorRef.current) onChangeContent(editorRef.current.innerHTML); };
+
+  const exec = (command, value = null) => {
+    document.execCommand(command, false, value);
+    editorRef.current && editorRef.current.focus();
+    save();
+  };
+
+  const insertChecklistItem = () => {
+    editorRef.current && editorRef.current.focus();
+    document.execCommand('insertHTML', false,
+      '<div class="cl-item"><input type="checkbox" contenteditable="false"><span>&nbsp;</span></div><p><br></p>');
+    save();
+  };
+
+  // Клик по чекбоксу внутри заметки — переключаем состояние и сохраняем в HTML
+  const handleClick = (e) => {
+    if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+      if (e.target.checked) e.target.setAttribute('checked', 'checked');
+      else e.target.removeAttribute('checked');
+      save();
+    }
+  };
+
+  const ToolbarBtn = ({ onClick, title, children, active }) => (
+    <button type="button" title={title}
+      onMouseDown={e => e.preventDefault()}
+      onClick={onClick}
+      className={`p-1.5 rounded-md transition-colors text-[#5a7a5a] hover:bg-[#eef3ee] hover:text-[#38513e] ${active ? 'bg-[#eef3ee] text-[#38513e]' : ''}`}>
+      {children}
+    </button>
+  );
+
+  return (
+    <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+      <style>{`
+        .note-editor:focus { outline: none; }
+        .note-editor h2 { font-size: 1.5rem; font-weight: 600; margin: 0.6em 0 0.3em; color: #38513e; }
+        .note-editor ul { list-style: disc; padding-left: 1.6em; margin: 0.3em 0; }
+        .note-editor ol { list-style: decimal; padding-left: 1.6em; margin: 0.3em 0; }
+        .note-editor p { margin: 0.2em 0; }
+        .note-editor .cl-item { display: flex; align-items: flex-start; gap: 0.5em; margin: 0.15em 0; }
+        .note-editor .cl-item input { margin-top: 0.35em; width: 15px; height: 15px; accent-color: #4a6b4a; cursor: pointer; flex-shrink: 0; }
+        .note-editor .cl-item input:checked + span { text-decoration: line-through; color: #b0c3b2; }
+        .note-editor:empty:before { content: attr(data-placeholder); color: #b0c3b2; }
+      `}</style>
+
+      {/* Шапка */}
+      <div className="flex items-center gap-2 px-3 sm:px-5 py-3 border-b border-[#e3ebe3]">
+        <button onClick={onBack} title="К списку заметок"
+          className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors shrink-0">
+          <ArrowLeft size={18} />
+        </button>
+        <input value={note.title}
+          onChange={e => onChangeTitle(e.target.value)}
+          placeholder="Название заметки"
+          className="flex-grow bg-transparent text-lg font-semibold text-[#38513e] placeholder-[#b0c3b2] focus:outline-none min-w-0" />
+        {confirmDelete ? (
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={onDelete} className="px-2 py-1 text-xs rounded bg-red-500 text-white hover:bg-red-600 transition-colors">Удалить</button>
+            <button onClick={() => setConfirmDelete(false)} className="px-2 py-1 text-xs text-[#8a9d8c] hover:bg-[#eef3ee] rounded transition-colors">Отмена</button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmDelete(true)} title="Удалить заметку"
+            className="p-1.5 text-[#9bb09d] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0">
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Панель инструментов */}
+      <div className="flex items-center gap-0.5 flex-wrap px-2 sm:px-4 py-2 border-b border-[#e3ebe3] bg-[#f9fbf9]">
+        <ToolbarBtn onClick={() => exec('formatBlock', 'h2')} title="Заголовок"><Heading size={16} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => exec('formatBlock', 'p')} title="Обычный текст"><Type size={16} /></ToolbarBtn>
+        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
+        <ToolbarBtn onClick={() => exec('bold')} title="Жирный"><Bold size={16} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => exec('italic')} title="Курсив"><Italic size={16} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => exec('underline')} title="Подчёркнутый"><Underline size={16} /></ToolbarBtn>
+        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
+        <ToolbarBtn onClick={() => exec('insertUnorderedList')} title="Маркированный список"><List size={16} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => exec('insertOrderedList')} title="Нумерованный список"><ListOrdered size={16} /></ToolbarBtn>
+        <ToolbarBtn onClick={insertChecklistItem} title="Чек-лист"><ListChecks size={16} /></ToolbarBtn>
+        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
+        <select onMouseDown={e => e.stopPropagation()} defaultValue=""
+          onChange={e => { exec('fontSize', e.target.value); e.target.value = ''; }}
+          className="text-xs text-[#5a7a5a] bg-transparent border border-[#e3ebe3] rounded-md px-1.5 py-1 focus:outline-none cursor-pointer">
+          <option value="" disabled>Размер</option>
+          <option value="1">Мелкий</option>
+          <option value="3">Обычный</option>
+          <option value="5">Крупный</option>
+          <option value="7">Очень крупный</option>
+        </select>
+      </div>
+
+      {/* Рабочая область */}
+      <div
+        ref={editorRef}
+        className="note-editor px-4 sm:px-8 py-5 min-h-[50vh] text-sm text-[#37352f] leading-relaxed focus:outline-none"
+        contentEditable
+        suppressContentEditableWarning
+        data-placeholder="Начните писать..."
+        onInput={save}
+        onBlur={save}
+        onClick={handleClick}
+      />
     </div>
   );
 };
@@ -372,6 +491,9 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const importantDebounce = useRef(null);
   const [monthlyReview, setMonthlyReview] = useState({ goals: [], ideas: [] });
   const reviewDebounce = useRef(null);
+  const [notes, setNotes] = useState([]);
+  const [openNoteId, setOpenNoteId] = useState(null);
+  const notesDebounce = useRef({});
 
   const debounceTimers = useRef({});
   const noteDebounceTimers = useRef({});
@@ -404,7 +526,45 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     return () => { if (importantDebounce.current) clearTimeout(importantDebounce.current); };
   }, [user, plannerId]);
 
-  // Save important tasks to Firestore (debounced)
+  // Load notes
+  useEffect(() => {
+    if (!user || !plannerId) return;
+    setNotes([]);
+    setOpenNoteId(null);
+    getDocs(collection(db, 'users', user.uid, 'planners', plannerId, 'notes')).then(snapshot => {
+      const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+      setNotes(list);
+    }).catch(err => console.error('Error loading notes:', err));
+  }, [user, plannerId]);
+
+  const createNote = () => {
+    const id = generateId();
+    const now = new Date().toISOString();
+    const note = { title: '', content: '', createdAt: now, updatedAt: now };
+    setNotes(prev => [{ id, ...note }, ...prev]);
+    setOpenNoteId(id);
+    if (user && plannerId) setDoc(doc(db, 'users', user.uid, 'planners', plannerId, 'notes', id), note).catch(err => console.error('Error creating note:', err));
+  };
+
+  const updateNote = (id, fields) => {
+    const now = new Date().toISOString();
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, ...fields, updatedAt: now } : n));
+    if (notesDebounce.current[id]) clearTimeout(notesDebounce.current[id]);
+    notesDebounce.current[id] = setTimeout(() => {
+      if (!user || !plannerId) return;
+      setDoc(doc(db, 'users', user.uid, 'planners', plannerId, 'notes', id), { ...fields, updatedAt: now }, { merge: true })
+        .catch(err => console.error('Error saving note:', err));
+    }, 500);
+  };
+
+  const deleteNote = (id) => {
+    setNotes(prev => prev.filter(n => n.id !== id));
+    setOpenNoteId(null);
+    if (user && plannerId) deleteDoc(doc(db, 'users', user.uid, 'planners', plannerId, 'notes', id)).catch(() => {});
+  };
+
+
   const saveImportantTasks = (updated) => {
     setImportantTasks(updated);
     if (importantDebounce.current) clearTimeout(importantDebounce.current);
@@ -1457,6 +1617,54 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     );
   };
 
+  // --- ЗАМЕТКИ ---
+  const renderNotesView = () => {
+    const note = openNoteId ? notes.find(n => n.id === openNoteId) : null;
+    if (openNoteId && note) {
+      return (
+        <NoteEditor
+          note={note}
+          onChangeTitle={(t) => updateNote(note.id, { title: t })}
+          onChangeContent={(c) => updateNote(note.id, { content: c })}
+          onBack={() => setOpenNoteId(null)}
+          onDelete={() => deleteNote(note.id)}
+        />
+      );
+    }
+    const stripHtml = (html) => (html || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
+    return (
+      <div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Создать заметку */}
+          <button onClick={createNote}
+            className="flex flex-col items-center justify-center gap-2 min-h-[150px] rounded-2xl border-2 border-dashed border-[#d7e3d7] text-[#6b8e6b] hover:border-[#6b8e6b] hover:bg-[#f4f7f4] transition-colors">
+            <Plus size={24} />
+            <span className="text-sm font-medium">Новая заметка</span>
+          </button>
+          {notes.map(n => {
+            const preview = stripHtml(n.content);
+            return (
+              <div key={n.id} onClick={() => setOpenNoteId(n.id)}
+                className="group relative flex flex-col min-h-[150px] rounded-2xl border border-[#e3ebe3] bg-white p-4 cursor-pointer hover:border-[#6b8e6b] hover:shadow-[0_4px_20px_rgba(56,81,62,0.08)] transition-all overflow-hidden">
+                <h3 className="text-sm font-semibold text-[#38513e] mb-1.5 line-clamp-2 pr-5">{n.title || 'Без названия'}</h3>
+                <p className="text-xs text-[#8a9d8c] flex-grow overflow-hidden line-clamp-5 leading-relaxed">{preview || 'Пустая заметка'}</p>
+                <span className="text-[10px] text-[#b0c3b2] mt-2 flex items-center gap-1"><FileText size={10} /> {fmt(n.updatedAt)}</span>
+                <button onClick={e => { e.stopPropagation(); deleteNote(n.id); }}
+                  className="absolute top-2 right-2 p-1 text-[#c7d3c7] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        {notes.length === 0 && (
+          <p className="text-sm text-[#a9bcac] text-center mt-6">Пока нет заметок. Создайте первую!</p>
+        )}
+      </div>
+    );
+  };
+
   // --- ПРОСРОЧЕННЫЕ ЗАДАЧИ ---
   const renderOverdueView = () => {
     const minDate = new Date();
@@ -1882,6 +2090,15 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             }`}>
             Важные задачи
           </button>
+          {/* Заметки */}
+          <button onClick={() => setView(view === 'notes' ? calView : 'notes')}
+            className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+              view === 'notes'
+                ? 'bg-[#38513e] text-white border-[#38513e]'
+                : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
+            }`}>
+            <FileText size={15} /> Заметки
+          </button>
           {/* Итоги */}
           {(() => {
             const today = new Date();
@@ -1911,6 +2128,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         {view === 'weekend' && renderWeekendView()}
         {view === 'month' && renderMonthView()}
         {view === 'important' && renderImportantView()}
+        {view === 'notes' && renderNotesView()}
         {view === 'overdue' && renderOverdueView()}
         {view === 'summary' && renderSummaryView()}
       </div>
