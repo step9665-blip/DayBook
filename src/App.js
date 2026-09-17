@@ -1355,12 +1355,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                 );
               })}
             </div>
-            <div className="flex items-center gap-2.5 px-3 py-2 mt-0.5 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
+            <form onSubmit={e => { e.preventDefault(); const inp = e.currentTarget.elements.newtask; if (inp.value.trim()) { addTask(dStr, inp.value); inp.value = ''; } }}
+              className="flex items-center gap-2.5 px-3 py-2 mt-0.5 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
               <Plus size={15} className="text-[#6b8e6b] shrink-0" />
-              <input className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
-                placeholder="Добавить задачу..."
-                onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) { addTask(dStr, e.target.value); e.target.value = ''; } }} />
-            </div>
+              <input name="newtask" className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
+                placeholder="Добавить задачу..." />
+            </form>
           </div>
         </div>
       );
@@ -1368,7 +1368,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
     return (
       <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-        <div className="px-4 sm:px-8 py-4 flex justify-end items-center border-b border-[#e3ebe3]">
+        <div className="px-4 sm:px-8 py-4 flex justify-center sm:justify-end items-center border-b border-[#e3ebe3]">
           <div className="flex items-center gap-2">
             <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
               <ChevronLeft size={18} />
