@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft, Undo2, Redo2 } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs, getDoc } from 'firebase/firestore';
@@ -161,6 +161,9 @@ const NoteEditor = ({ note, onChangeTitle, onChangeContent, onBack, onDelete }) 
 
       {/* Панель инструментов */}
       <div className="flex items-center gap-0.5 flex-wrap px-2 sm:px-4 py-2 border-b border-[#e3ebe3] bg-[#f9fbf9]">
+        <ToolbarBtn onClick={() => exec('undo')} title="Отменить (Ctrl+Z)"><Undo2 size={16} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => exec('redo')} title="Вернуть (Ctrl+Y)"><Redo2 size={16} /></ToolbarBtn>
+        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
         <ToolbarBtn onClick={() => exec('formatBlock', 'h2')} title="Заголовок"><Heading size={16} /></ToolbarBtn>
         <ToolbarBtn onClick={() => exec('formatBlock', 'p')} title="Обычный текст"><Type size={16} /></ToolbarBtn>
         <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
