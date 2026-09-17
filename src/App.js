@@ -942,7 +942,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
         {/* Заголовок дня */}
         <div className="px-4 sm:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-[#e3ebe3]">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap order-2 sm:order-1">
             {/* Тег-фильтр */}
             {allTags.length > 0 && (
               <div className="flex gap-1 flex-wrap">
@@ -971,7 +971,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center justify-center gap-2 w-full sm:w-auto order-1 sm:order-2 self-center sm:self-auto">
             <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
               <ChevronLeft size={18} />
             </button>
