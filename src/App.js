@@ -585,7 +585,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     if (!recurringTasks.length) return;
     const dateStr = formatDate(currentDate);
     const dow = getDayOfWeek(currentDate);
-    const applicable = recurringTasks.filter(rt => (rt.days || []).includes(dow));
+    const dayOfMonth = currentDate.getDate();
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+    const isLastDay = dayOfMonth === daysInMonth;
+    const applicable = recurringTasks.filter(rt => {
+      if (rt.mode === 'month') {
+        const md = rt.monthDays || [];
+        // прямое совпадение числа ИЛИ выбранное число больше длины месяца → последний день
+        return md.includes(dayOfMonth) || (isLastDay && md.some(d => d > daysInMonth));
+      }
+      return (rt.days || []).includes(dow);
+    });
     if (!applicable.length) return;
 
     setTasks(prev => {
@@ -844,13 +854,20 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     const [newText, setNewText] = useState('');
     const [newTags, setNewTags] = useState([]);
     const [newDays, setNewDays] = useState([]);
+    const [newMonthDays, setNewMonthDays] = useState([]);
+    const [newMode, setNewMode] = useState('week');
     const recurringTasks = planner?.recurringTasks || [];
 
+    const canAdd = newText.trim() && (newMode === 'week' ? newDays.length : newMonthDays.length);
+
     const addRecurring = () => {
-      if (!newText.trim() || !newDays.length) return;
-      const updated = [...recurringTasks, { id: generateId(), text: newText.trim(), tags: newTags, days: newDays }];
-      onUpdateRecurring(updated);
-      setNewText(''); setNewTags([]); setNewDays([]);
+      if (!canAdd) return;
+      const base = { id: generateId(), text: newText.trim(), tags: newTags, mode: newMode };
+      const task = newMode === 'week'
+        ? { ...base, days: newDays }
+        : { ...base, monthDays: [...newMonthDays].sort((a, b) => a - b) };
+      onUpdateRecurring([...recurringTasks, task]);
+      setNewText(''); setNewTags([]); setNewDays([]); setNewMonthDays([]);
     };
 
     const deleteRecurring = (id) => onUpdateRecurring(recurringTasks.filter(rt => rt.id !== id));
@@ -877,11 +894,20 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                         <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#e3ebe3] text-[#38513e] rounded">#{tag}</span>
                       ))}
                     </div>
-                    <div className="flex gap-1">
-                      {WEEKDAYS.map((d, i) => (
-                        <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${(rt.days || []).includes(i) ? 'bg-[#38513e] text-white' : 'bg-[#e3ebe3] text-[#8a9d8c]'}`}>{d}</span>
-                      ))}
-                    </div>
+                    {rt.mode === 'month' ? (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <span className="text-[10px] text-[#8a9d8c] mr-0.5">Числа:</span>
+                        {(rt.monthDays || []).map(d => (
+                          <span key={d} className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-[#38513e] text-white">{d}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex gap-1">
+                        {WEEKDAYS.map((d, i) => (
+                          <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${(rt.days || []).includes(i) ? 'bg-[#38513e] text-white' : 'bg-[#e3ebe3] text-[#8a9d8c]'}`}>{d}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <button onClick={() => deleteRecurring(rt.id)} className="p-1.5 text-[#8a9d8c] hover:text-red-500 hover:bg-red-50 rounded shrink-0">
                     <Trash2 size={13} />
@@ -904,20 +930,49 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               <p className="text-xs text-[#8a9d8c] mb-1.5">Теги</p>
               <TagInput tags={newTags} onChange={setNewTags} />
             </div>
-            <div>
-              <p className="text-xs text-[#8a9d8c] mb-1.5">Дни недели</p>
-              <div className="flex gap-1.5">
-                {WEEKDAYS.map((d, i) => (
-                  <button key={i} onClick={() => {
-                    setNewDays(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
-                  }}
-                    className={`px-2.5 py-1.5 text-xs font-medium rounded transition-colors ${newDays.includes(i) ? 'bg-[#38513e] text-white' : 'bg-[#eef3ee] text-[#8a9d8c] hover:text-[#38513e]'}`}>
-                    {d}
-                  </button>
-                ))}
-              </div>
+            {/* Переключатель режима */}
+            <div className="flex bg-[#eef3ee] rounded-lg p-1 gap-1">
+              {[{ id: 'week', label: 'По дням недели' }, { id: 'month', label: 'По числам месяца' }].map(m => (
+                <button key={m.id} onClick={() => setNewMode(m.id)}
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${newMode === m.id ? 'bg-[#38513e] text-white' : 'text-[#8a9d8c] hover:text-[#38513e]'}`}>
+                  {m.label}
+                </button>
+              ))}
             </div>
-            <button onClick={addRecurring} disabled={!newText.trim() || !newDays.length}
+            {newMode === 'week' ? (
+              <div>
+                <p className="text-xs text-[#8a9d8c] mb-1.5">Дни недели</p>
+                <div className="flex gap-1.5">
+                  {WEEKDAYS.map((d, i) => (
+                    <button key={i} onClick={() => {
+                      setNewDays(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
+                    }}
+                      className={`px-2.5 py-1.5 text-xs font-medium rounded transition-colors ${newDays.includes(i) ? 'bg-[#38513e] text-white' : 'bg-[#eef3ee] text-[#8a9d8c] hover:text-[#38513e]'}`}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs text-[#8a9d8c] mb-1.5">Числа месяца</p>
+                <div className="grid grid-cols-7 gap-1">
+                  {[...Array(31)].map((_, idx) => {
+                    const day = idx + 1;
+                    return (
+                      <button key={day} onClick={() => {
+                        setNewMonthDays(prev => prev.includes(day) ? prev.filter(x => x !== day) : [...prev, day]);
+                      }}
+                        className={`py-1.5 text-xs font-medium rounded transition-colors ${newMonthDays.includes(day) ? 'bg-[#38513e] text-white' : 'bg-[#eef3ee] text-[#8a9d8c] hover:text-[#38513e]'}`}>
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-[#b0c3b2] mt-1.5">Если выбранного числа нет в месяце (напр. 31 в феврале) — задача появится в последний день месяца.</p>
+              </div>
+            )}
+            <button onClick={addRecurring} disabled={!canAdd}
               className="w-full px-4 py-2 bg-[#38513e] text-white text-sm font-medium rounded-md hover:bg-[#2a3d2f] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5">
               <Plus size={14} /> Добавить
             </button>
