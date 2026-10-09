@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, RefreshCw, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft, Undo2, Redo2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft, Undo2, Redo2, Clock, Star, Repeat, Search, ChevronsLeft, ChevronsRight, LogOut } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs, getDoc } from 'firebase/firestore';
@@ -482,13 +482,22 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [confirmAction, setConfirmAction] = useState(null); // { id, type: 'delete' | 'move' }
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
   const [extraLines, setExtraLines] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const newTaskInputRef = useRef(null);
   const [showPlannerDropdown, setShowPlannerDropdown] = useState(false);
   const [showViewDropdown, setShowViewDropdown] = useState(false);
   const [calView, setCalView] = useState('day'); // последний выбранный вид календаря
+  const [sidebarCompact, setSidebarCompact] = useState(() => {
+    try { return localStorage.getItem('db_sidebar_compact') === '1'; } catch (e) { return false; }
+  });
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calMonth, setCalMonth] = useState(new Date());
+  const toggleSidebar = () => setSidebarCompact(v => {
+    const nv = !v;
+    try { localStorage.setItem('db_sidebar_compact', nv ? '1' : '0'); } catch (e) {}
+    return nv;
+  });
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [importantTasks, setImportantTasks] = useState([]);
   const importantDebounce = useRef(null);
@@ -982,213 +991,175 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     );
   };
 
-  // --- ДЕНЬ ---
+  // --- ДЕНЬ (бумага) ---
   const renderDayView = () => {
     const dateStr = formatDate(currentDate);
     const allDayTasks = tasks[dateStr] || [];
     const dayTasks = getFilteredTasks(allDayTasks)
       .slice()
       .sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
-    const weekday = currentDate.toLocaleDateString('ru-RU', { weekday: 'long' });
-    const dayNum = currentDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
     const emptyLines = Math.max(0, 10 - dayTasks.length) + extraLines;
+    const titleToday = dateStr === todayStr ? 'Сегодня' : currentDate.toLocaleDateString('ru-RU', { weekday: 'long' });
 
     return (
-      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-        {/* Заголовок дня */}
-        <div className="px-4 sm:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-[#e3ebe3]">
-          <div className="flex gap-2 flex-wrap order-2 sm:order-1">
-            {/* Тег-фильтр */}
-            {allTags.length > 0 && (
-              <div className="flex gap-1 flex-wrap">
-                {allTags.map(tag => (
-                  <button key={tag} onClick={() => {
-                    const s = new Set(selectedTags);
-                    if (s.has(tag)) s.delete(tag); else s.add(tag);
-                    setSelectedTags(s);
-                  }}
-                    className={`px-2 py-1 text-xs rounded-md transition-colors ${selectedTags.has(tag) ? 'bg-[#38513e] text-white' : 'bg-[#eef3ee] text-[#8a9d8c] hover:text-[#38513e]'}`}>
-                    #{tag}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="relative">
-              <button onClick={() => setShowSearch(!showSearch)}
-                className="px-3 py-1 text-xs text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-md transition-colors border border-[#e3ebe3]">
-                Поиск
+      <div className="relative flex-1 min-h-0 bg-paper border border-paper-border rounded-[24px] shadow-card overflow-hidden flex flex-col">
+        {/* Шапка бумаги: Сегодня + чипы */}
+        <div className="flex-none h-14 flex items-center gap-2 px-5 border-b border-paper-border overflow-x-auto">
+          <span className="text-lg font-extrabold capitalize mr-2 shrink-0">{titleToday}</span>
+          <button onClick={() => setSelectedTags(new Set())}
+            className={`shrink-0 text-[13px] font-semibold px-3.5 py-1.5 rounded-full ${selectedTags.size === 0 ? 'bg-primary text-white' : 'bg-tag-green-bg text-tag-green-text'}`}>
+            Все
+          </button>
+          {allTags.map(tag => {
+            const sel = selectedTags.has(tag);
+            return (
+              <button key={tag} onClick={() => { const s = new Set(selectedTags); if (s.has(tag)) s.delete(tag); else s.add(tag); setSelectedTags(s); }}
+                className={`shrink-0 text-[13px] font-semibold px-3.5 py-1.5 rounded-full ${sel ? 'bg-primary text-white' : 'bg-tag-green-bg text-tag-green-text'}`}>
+                #{tag}
               </button>
-              {showSearch && (
-                <input type="text" placeholder="Найти задачу..." value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="absolute top-full left-0 mt-1 w-56 px-3 py-2 border border-[#e3ebe3] rounded-lg text-sm text-[#38513e] placeholder-[#b0c3b2] focus:outline-none focus:border-[#38513e] bg-white shadow-sm z-10"
-                  autoFocus />
-              )}
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-2 w-full sm:w-auto order-1 sm:order-2 self-center sm:self-auto">
-            <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
-              <ChevronLeft size={18} />
-            </button>
-            <div className="text-center min-w-[130px]">
-              <p className="text-base font-semibold text-[#38513e] capitalize">{weekday}</p>
-              <p className="text-xs text-[#8a9d8c]">{dayNum}</p>
-            </div>
-            <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
-              <ChevronRight size={18} />
-            </button>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Задачи */}
-        <div className="min-h-[400px]">
+        {/* Область строк */}
+        <div className="relative flex-1 min-h-0 overflow-y-auto">
+          {/* Красное поле */}
+          <div className="absolute top-0 left-10 sm:left-14 bottom-0 w-px bg-paper-margin z-[1] pointer-events-none" />
+
           {dayTasks.map((task, i) => {
             const isEditing = editingId === task.id;
             const isNoteOpen = expandedNoteId === task.id;
             const isOverdue = !task.completed && dateStr < todayStr;
-            const rowBg = task.completed
-              ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]'
-              : isOverdue
-                ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]'
-                : 'hover:bg-[#f4f7f4]';
+            const important = (task.tags || []).includes('важное') || isOverdue;
 
             return (
-              <div key={task.id} className="border-b border-[#eef3ee]">
+              <div key={task.id}>
                 {/* Строка задачи */}
-                <div className={`group flex items-center min-h-[44px] ${rowBg} px-3 sm:px-8 md:px-16 text-sm text-[#38513e] relative transition-colors`}>
-                  <span className="mr-3 text-[#b0c3b2] text-xs w-5 shrink-0">{i + 1}</span>
+                <div className={`group relative isolate flex items-center gap-3 ${task.completed ? 'min-h-[52px]' : 'min-h-[60px]'} pr-2 border-b border-paper-border`}>
+                  {important && !task.completed && <div className="absolute inset-0 -z-10 bg-paper-important" />}
+                  <span className="w-10 sm:w-14 shrink-0 text-center text-xs text-paper-num">{i + 1}</span>
 
                   {isEditing ? (
-                    <div className="flex items-start flex-grow gap-2 py-2"
+                    <div className="flex items-start flex-grow gap-2 py-2 pr-2"
                       onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) finishEdit(dateStr, task.id); }}>
                       <div className="flex-grow space-y-2">
                         <input type="text" value={editingText} onChange={e => setEditingText(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') finishEdit(dateStr, task.id); if (e.key === 'Escape') setEditingId(null); }}
-                          className="w-full bg-white border border-[#38513e] px-2 py-1 text-sm rounded focus:outline-none text-[#38513e]"
+                          className="w-full bg-white border border-primary px-2 py-1 text-sm rounded-lg focus:outline-none text-ink"
                           autoFocus />
                         <TagInput tags={editingTags} onChange={setEditingTags} placeholder="Добавить тег..." />
                       </div>
                       <button onClick={() => finishEdit(dateStr, task.id)}
-                        className="p-1.5 bg-[#38513e] text-white rounded hover:bg-[#2a3d2f] transition-colors shrink-0 mt-0.5">
+                        className="p-1.5 bg-primary text-white rounded-lg hover:bg-[#0a4d3a] transition-colors shrink-0 mt-0.5">
                         <Check size={12} />
                       </button>
                     </div>
                   ) : (
                     <>
-                      <input type="checkbox" checked={task.completed}
-                        onChange={() => updateTask(dateStr, task.id, { completed: !task.completed })}
-                        className="mr-2.5 w-4 h-4 cursor-pointer accent-[#38513e] shrink-0" />
-                      <div className="flex-grow py-2.5 min-w-0">
+                      <label className="shrink-0 cursor-pointer relative flex items-center">
+                        <input type="checkbox" checked={task.completed}
+                          onChange={() => updateTask(dateStr, task.id, { completed: !task.completed })}
+                          className="peer sr-only" />
+                        <span className={`w-[22px] h-[22px] rounded-[7px] border-[1.8px] flex items-center justify-center transition-colors ${task.completed ? 'bg-accent border-accent' : 'bg-[#FFFDF6] border-paper-cb'}`}>
+                          {task.completed && <Check size={14} className="text-white" strokeWidth={3} />}
+                        </span>
+                      </label>
+                      <div className="flex-grow py-2 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span onClick={() => startEdit(task)}
-                            className={`cursor-text ${task.completed ? 'line-through text-[#b0c3b2]' : ''}`}>
+                            className={`cursor-text text-[15px] ${task.completed ? 'line-through text-done-text font-medium' : 'font-semibold text-ink'}`}>
                             {task.text}
                           </span>
                           {(task.tags || []).map(tag => (
-                            <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#eef3ee] text-[#8a9d8c] rounded shrink-0">#{tag}</span>
+                            <span key={tag} className="text-[11px] font-semibold px-2 py-0.5 bg-tag-green-bg text-tag-green-text rounded-full shrink-0">#{tag}</span>
                           ))}
-                          {task.recurringId && <RefreshCw size={10} className="text-[#b0c3b2] shrink-0" title="Повторяющаяся" />}
+                          {task.recurringId && <Repeat size={11} className="text-paper-num shrink-0" />}
                         </div>
                         {task.notes && !isNoteOpen && (
-                          <p className="text-xs text-[#8a9d8c] mt-0.5 truncate">{task.notes}</p>
+                          <p className="text-xs text-paper-muted mt-0.5 truncate">{task.notes}</p>
                         )}
                       </div>
                       {confirmAction && confirmAction.id === task.id ? (
-                        <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                          <span className="text-xs text-[#8a9d8c] hidden sm:inline">
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-xs text-paper-muted hidden sm:inline">
                             {confirmAction.type === 'delete' ? 'Удалить?' : 'Перенести?'}
                           </span>
-                          <button onClick={() => {
-                              if (confirmAction.type === 'delete') deleteTask(dateStr, task.id);
-                              else moveToNextDay(task, dateStr);
-                              setConfirmAction(null);
-                            }}
+                          <button onClick={() => { if (confirmAction.type === 'delete') deleteTask(dateStr, task.id); else moveToNextDay(task, dateStr); setConfirmAction(null); }}
                             title={confirmAction.type === 'move' ? 'На следующий день' : undefined}
-                            className={`px-2 py-1 text-xs rounded transition-colors text-white ${confirmAction.type === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#38513e] hover:bg-[#2a3d2f]'}`}>
+                            className={`px-2 py-1 text-xs rounded-lg transition-colors text-white ${confirmAction.type === 'delete' ? 'bg-danger hover:opacity-90' : 'bg-primary hover:bg-[#0a4d3a]'}`}>
                             Да
                           </button>
                           {confirmAction.type === 'move' && (
                             <label title="Выбрать дату переноса"
                               onClick={e => { const inp = e.currentTarget.querySelector('input'); try { inp.showPicker(); } catch (_) {} }}
-                              className="px-2 py-1 text-xs rounded bg-[#eef3ee] text-[#38513e] hover:bg-[#e3ebe3] transition-colors cursor-pointer relative">
+                              className="px-2 py-1 text-xs rounded-lg bg-surface-soft text-primary hover:bg-nav-active transition-colors cursor-pointer relative">
                               Выбрать дату
-                              <input type="date"
-                                onChange={e => { moveTaskToDate(dateStr, task, e.target.value); setConfirmAction(null); }}
+                              <input type="date" onChange={e => { moveTaskToDate(dateStr, task, e.target.value); setConfirmAction(null); }}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                             </label>
                           )}
                           <button onClick={() => setConfirmAction(null)}
-                            className="px-2 py-1 text-xs text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded transition-colors">
-                            Нет
-                          </button>
+                            className="px-2 py-1 text-xs text-paper-muted hover:text-ink rounded-lg transition-colors">Нет</button>
                         </div>
                       ) : (
-                      <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ml-2 shrink-0">
-                        <button onClick={() => setConfirmAction({ id: task.id, type: 'move' })}
-                          className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded transition-colors"
-                          title="Перенести на следующий день">
-                          <ArrowRight size={13} />
-                        </button>
-                        <button onClick={() => openInCalendar(task, dateStr)}
-                          className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded transition-colors"
-                          title="Добавить в Google Календарь">
-                          <Calendar size={13} />
-                        </button>
-                        <button onClick={() => setExpandedNoteId(isNoteOpen ? null : task.id)}
-                          className={`p-1.5 rounded transition-colors ${isNoteOpen ? 'text-[#38513e] bg-[#eef3ee]' : 'text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee]'}`}
-                          title="Заметка">
-                          <ChevronDown size={13} className={`transition-transform ${isNoteOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        <button onClick={() => setConfirmAction({ id: task.id, type: 'delete' })}
-                          className="p-1.5 text-[#8a9d8c] hover:text-red-500 hover:bg-red-50 rounded transition-colors">
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
+                        <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button onClick={() => setExpandedNoteId(isNoteOpen ? null : task.id)} aria-label="Заметка и подзадачи"
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isNoteOpen ? 'bg-white text-ink' : 'text-ink-3 hover:bg-white/60'}`}>
+                            <ChevronDown size={18} className={`transition-transform ${isNoteOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          <button onClick={() => setConfirmAction({ id: task.id, type: 'move' })} aria-label="Перенести на следующий день"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/60 transition-colors">
+                            <ArrowRight size={18} />
+                          </button>
+                          <button onClick={() => openInCalendar(task, dateStr)} aria-label="Добавить в Google Календарь"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/60 transition-colors hidden sm:flex">
+                            <Calendar size={18} />
+                          </button>
+                          <button onClick={() => setConfirmAction({ id: task.id, type: 'delete' })} aria-label="Удалить задачу"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-ink-3 hover:text-danger transition-colors">
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       )}
                     </>
                   )}
                 </div>
 
-                {/* Заметка к задаче */}
+                {/* Заметка и подзадачи */}
                 {isNoteOpen && (
-                  <div className="px-3 sm:px-8 md:px-16 pb-3 bg-[#f4f7f4]">
-                    <div className="ml-8 pl-2.5 border-l-2 border-[#e3ebe3]">
-                      <textarea
-                        value={task.notes || ''}
-                        onChange={e => updateTask(dateStr, task.id, { notes: e.target.value })}
-                        ref={el => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
-                        onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
-                        placeholder="Добавить заметку к задаче..."
-                        rows={1}
-                        className="w-full bg-transparent text-xs text-[#38513e] placeholder-[#b0c3b2] focus:outline-none resize-none py-2 leading-relaxed overflow-hidden"
-                        autoFocus
-                      />
-                      {/* Подзадачи */}
-                      <div className="mt-1 pt-2 border-t border-[#e3ebe3]">
-                        <p className="text-[10px] font-medium text-[#8a9d8c] uppercase tracking-wider mb-1.5">Подзадачи</p>
-                        <div className="space-y-1">
-                          {(task.subtasks || []).map(st => (
-                            <div key={st.id} className="group/sub flex items-center gap-2">
-                              <input type="checkbox" checked={st.done}
-                                onChange={() => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).map(s => s.id === st.id ? { ...s, done: !s.done } : s) })}
-                                className="w-3.5 h-3.5 accent-[#4a6b4a] cursor-pointer shrink-0" />
-                              <input value={st.text}
-                                onChange={e => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).map(s => s.id === st.id ? { ...s, text: e.target.value } : s) })}
-                                className={`flex-grow bg-transparent text-xs focus:outline-none min-w-0 ${st.done ? 'line-through text-[#b0c3b2]' : 'text-[#38513e]'}`} />
-                              <button onClick={() => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).filter(s => s.id !== st.id) })}
-                                className="p-1 text-[#b0c3b2] hover:text-red-500 hover:bg-red-50 rounded shrink-0 opacity-100 sm:opacity-0 sm:group-hover/sub:opacity-100 transition-opacity">
-                                <X size={12} />
-                              </button>
-                            </div>
-                          ))}
-                          <div className="flex items-center gap-2">
-                            <Plus size={12} className="text-[#6b8e6b] shrink-0" />
-                            <input
-                              placeholder="Добавить подзадачу..."
-                              onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) { updateTask(dateStr, task.id, { subtasks: [...(task.subtasks || []), { id: generateId(), text: e.target.value.trim(), done: false }] }); e.target.value = ''; } }}
-                              className="flex-grow bg-transparent text-xs text-[#38513e] placeholder-[#b0c3b2] focus:outline-none"
-                            />
+                  <div className="bg-paper-note border-b border-paper-border pl-[54px] sm:pl-[70px] pr-4 sm:pr-6 py-3">
+                    <textarea
+                      value={task.notes || ''}
+                      onChange={e => updateTask(dateStr, task.id, { notes: e.target.value })}
+                      ref={el => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                      onInput={e => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                      placeholder="Добавить заметку к задаче…"
+                      rows={1}
+                      className="w-full bg-transparent text-sm text-ink placeholder-paper-muted focus:outline-none resize-none leading-relaxed overflow-hidden"
+                      autoFocus
+                    />
+                    <div className="mt-1 pt-2 border-t border-paper-border">
+                      <p className="text-[11px] font-bold text-paper-muted uppercase tracking-wider mb-1.5">Подзадачи</p>
+                      <div className="space-y-1">
+                        {(task.subtasks || []).map(st => (
+                          <div key={st.id} className="group/sub flex items-center gap-2.5">
+                            <input type="checkbox" checked={st.done}
+                              onChange={() => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).map(s => s.id === st.id ? { ...s, done: !s.done } : s) })}
+                              className="w-[18px] h-[18px] accent-accent cursor-pointer shrink-0" />
+                            <input value={st.text}
+                              onChange={e => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).map(s => s.id === st.id ? { ...s, text: e.target.value } : s) })}
+                              className={`flex-grow bg-transparent text-sm focus:outline-none min-w-0 ${st.done ? 'line-through text-paper-muted' : 'text-ink'}`} />
+                            <button onClick={() => updateTask(dateStr, task.id, { subtasks: (task.subtasks || []).filter(s => s.id !== st.id) })}
+                              className="p-1 text-paper-num hover:text-danger rounded shrink-0 opacity-100 sm:opacity-0 sm:group-hover/sub:opacity-100 transition-opacity">
+                              <X size={13} />
+                            </button>
                           </div>
+                        ))}
+                        <div className="flex items-center gap-2.5 text-accent">
+                          <Plus size={16} className="shrink-0" />
+                          <input placeholder="Добавить подзадачу…"
+                            onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) { updateTask(dateStr, task.id, { subtasks: [...(task.subtasks || []), { id: generateId(), text: e.target.value.trim(), done: false }] }); e.target.value = ''; } }}
+                            className="flex-grow bg-transparent text-sm font-semibold placeholder-accent focus:outline-none" />
                         </div>
                       </div>
                     </div>
@@ -1198,50 +1169,48 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             );
           })}
 
-          {/* Поле добавления */}
-          <div className="flex items-center min-h-[44px] border-b border-[#eef3ee] px-3 sm:px-8 md:px-16 focus-within:bg-[#f4f7f4]">
-            <span className="mr-3 text-[#b0c3b2] text-xs w-5 shrink-0">{dayTasks.length + 1}</span>
+          {/* Строка добавления */}
+          <div className="flex items-center gap-3 min-h-[52px] pr-4 border-b border-paper-border focus-within:bg-white/40">
+            <span className="w-10 sm:w-14 shrink-0 text-center text-xs text-paper-num">{dayTasks.length + 1}</span>
+            <Plus size={20} className="text-accent shrink-0" strokeWidth={2.2} />
             <input
               ref={newTaskInputRef}
-              className="flex-grow bg-transparent border-none outline-none text-sm text-[#38513e] placeholder-[#b0c3b2]"
-              placeholder="Добавить задачу..."
-              onKeyDown={e => { if (e.key === 'Enter') { addTask(dateStr, e.target.value); e.target.value = ''; } }}
+              className="flex-grow bg-transparent outline-none text-[15px] text-ink placeholder-paper-muted"
+              placeholder="Добавить задачу…"
+              onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) { addTask(dateStr, e.target.value); e.target.value = ''; } }}
             />
             {hasSpeechRecognition && (
-              <button
-                onClick={startVoiceInput}
-                className={`ml-2 p-1.5 rounded transition-colors shrink-0 ${isListening ? 'text-red-500 bg-red-50 animate-pulse' : 'text-[#b0c3b2] hover:text-[#8a9d8c] hover:bg-[#eef3ee]'}`}
-                title="Голосовой ввод"
-              >
-                <Mic size={15} />
+              <button onClick={startVoiceInput} aria-label="Голосовой ввод"
+                className={`p-1.5 rounded-lg transition-colors shrink-0 ${isListening ? 'text-danger bg-danger-bg animate-pulse' : 'text-paper-muted hover:bg-white/60'}`}>
+                <Mic size={17} />
               </button>
             )}
           </div>
 
           {[...Array(emptyLines)].map((_, i) => (
-            <div key={i} className="min-h-[44px] border-b border-[#eef3ee]" />
+            <div key={i} className="flex items-center min-h-[44px] border-b border-paper-border">
+              <span className="w-10 sm:w-14 shrink-0 text-center text-xs text-paper-num/60">{dayTasks.length + 2 + i}</span>
+            </div>
           ))}
 
           <div className="flex justify-center py-2">
-            <button
-              onClick={() => setExtraLines(n => n + 5)}
-              className="text-xs text-[#b0c3b2] hover:text-[#8a9d8c] transition-colors px-3 py-1 hover:bg-[#f4f7f4] rounded-md"
-            >
+            <button onClick={() => setExtraLines(n => n + 5)}
+              className="text-xs text-paper-num hover:text-paper-muted transition-colors px-3 py-1 rounded-md">
               + добавить строки
             </button>
           </div>
-        </div>
 
-        {/* Блок заметок дня */}
-        <div className="border-t border-[#e3ebe3] px-4 sm:px-8 md:px-16 py-5">
-          <p className="text-xs font-medium text-[#8a9d8c] uppercase tracking-wide mb-2">Заметки</p>
-          <textarea
-            value={dayNotes[dateStr] || ''}
-            onChange={e => setDayNotes({ ...dayNotes, [dateStr]: e.target.value })}
-            placeholder="Записи, мысли, идеи на этот день..."
-            rows={4}
-            className="w-full bg-transparent text-sm text-[#38513e] placeholder-[#b0c3b2] focus:outline-none resize-none leading-relaxed"
-          />
+          {/* Заметки дня */}
+          <div className="pl-[54px] sm:pl-[70px] pr-4 sm:pr-6 py-3">
+            <div className="font-serif-note italic text-sm text-[#6B6652] mb-1">Заметки дня</div>
+            <textarea
+              value={dayNotes[dateStr] || ''}
+              onChange={e => setDayNotes({ ...dayNotes, [dateStr]: e.target.value })}
+              placeholder="Записи, мысли, идеи на этот день…"
+              rows={3}
+              className="w-full bg-transparent text-sm text-ink placeholder-paper-muted focus:outline-none resize-none leading-relaxed"
+            />
+          </div>
         </div>
       </div>
     );
@@ -2072,155 +2041,307 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     );
   };
 
-  return (
-    <div className="min-h-screen bg-[#f4f7f4] p-2 sm:p-6">
-      {showRecurringModal && <RecurringModal />}
+  // ===== Вспомогательные данные для нового каркаса =====
+  const plannerName = planners.find(p => p.id === currentPlannerId)?.name || 'Ежедневник';
 
-      <div className="max-w-5xl mx-auto">
-        {/* Шапка */}
-        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <button onClick={() => setShowPlannerDropdown(v => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#e3ebe3] rounded-md hover:border-[#b0c3b2] transition-colors text-sm text-[#38513e] w-full sm:w-auto justify-between sm:justify-start min-w-0 sm:min-w-[200px]">
-                <span className="flex items-center gap-2 truncate">
-                  {currentColorInfo && <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: currentColorInfo.dot }} />}
-                  <span className="truncate">{planners.find(p => p.id === currentPlannerId)?.name || 'Ежедневник'}</span>
-                </span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  className={`text-[#8a9d8c] transition-transform shrink-0 ${showPlannerDropdown ? 'rotate-180' : ''}`}>
-                  <path d="m6 9 6 6 6-6"/>
-                </svg>
-              </button>
-              {showPlannerDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-[#e3ebe3] rounded-lg shadow-md z-50 min-w-[200px] py-1"
-                  onMouseLeave={() => setShowPlannerDropdown(false)}>
-                  {planners.map(p => {
-                    const pColor = PLANNER_COLORS.find(c => c.id === p.color);
-                    return (
-                      <button key={p.id} onClick={() => { onSelectPlanner(p.id); setShowPlannerDropdown(false); }}
-                        className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-[#eef3ee] transition-colors ${p.id === currentPlannerId ? 'text-[#38513e] font-medium' : 'text-[#5a7a5a]'}`}>
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pColor?.dot }} />
-                        {p.name}
-                        {p.id === currentPlannerId && <Check size={12} className="ml-auto" />}
-                      </button>
-                    );
-                  })}
-                  <div className="border-t border-[#eef3ee] mt-1 pt-1">
-                    <button onClick={() => { onBack(); setShowPlannerDropdown(false); }}
-                      className="w-full text-left px-3 py-2 text-sm text-[#8a9d8c] hover:bg-[#eef3ee] transition-colors">
-                      ← Все ежедневники
-                    </button>
-                    <button onClick={() => { onNewPlanner(); setShowPlannerDropdown(false); }}
-                      className="w-full text-left px-3 py-2 text-sm text-[#38513e] hover:bg-[#eef3ee] transition-colors flex items-center gap-1.5">
-                      <Plus size={13} /> Создать новый
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            <button onClick={() => setShowRecurringModal(true)}
-              title="Повторяющиеся задачи"
-              className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white border border-transparent hover:border-[#e3ebe3] rounded-md transition-colors">
-              <RefreshCw size={15} />
-            </button>
-          </div>
+  const overdueCount = (() => {
+    const minDate = new Date(); minDate.setDate(minDate.getDate() - 30);
+    const minStr = formatDate(minDate);
+    let c = 0;
+    Object.entries(tasks).forEach(([dStr, arr]) => {
+      if (dStr < todayStr && dStr >= minStr) c += (arr || []).filter(t => !t.completed).length;
+    });
+    return c;
+  })();
 
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <span className="text-xs text-[#8a9d8c] hidden sm:inline">{user.displayName || user.email}</span>
-            <button onClick={onSignOut}
-              className="px-3 py-1.5 text-xs text-[#8a9d8c] hover:text-[#38513e] hover:bg-white border border-transparent hover:border-[#e3ebe3] rounded-md transition-colors">
-              Выйти
-            </button>
-          </div>
-        </div>
+  const bDateStr = formatDate(currentDate);
+  const bTasks = tasks[bDateStr] || [];
+  const bTotal = bTasks.length;
+  const bDone = bTasks.filter(t => t.completed).length;
+  const bLeft = bTotal - bDone;
+  const ringC = 2 * Math.PI * 40;
+  const ringDone = bTotal ? (bDone / bTotal) * ringC : 0;
+  const bWeekday = currentDate.toLocaleDateString('ru-RU', { weekday: 'long' });
+  const bDateLabel = currentDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const showBanner = view === 'day' && getDaySlot() <= 4;
 
-        {/* Переключатель */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center gap-2 mb-5">
-          {/* Выпадающий список: День / Неделя / Месяц */}
-          <div className="relative">
-            <button onClick={() => setShowViewDropdown(v => !v)}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-5 py-2 text-sm font-medium rounded-full border transition-all ${
-                ['day', 'week', 'weekend', 'month'].includes(view)
-                  ? 'bg-[#38513e] text-white border-[#38513e]'
-                  : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
-              }`}>
-              {{ day: 'День', week: 'Неделя', month: 'Месяц' }[calView] || 'День'}
-              <ChevronDown size={15} className={`transition-transform ${showViewDropdown ? 'rotate-180' : ''}`} />
-            </button>
-            {showViewDropdown && (
-              <div className="absolute top-full left-0 mt-1 bg-white border border-[#e3ebe3] rounded-xl shadow-md z-50 min-w-[140px] py-1"
-                onMouseLeave={() => setShowViewDropdown(false)}>
-                {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }].map(o => (
-                  <button key={o.id} onClick={() => { setView(o.id); setCalView(o.id); setDayStage('day'); setShowViewDropdown(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#eef3ee] transition-colors ${view === o.id ? 'text-[#38513e] font-medium' : 'text-[#5a7a5a]'}`}>
-                    {o.label}
-                    {view === o.id && <Check size={12} className="ml-auto" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* Просроченные */}
-          <button onClick={() => setView(view === 'overdue' ? calView : 'overdue')}
-            className={`w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-              view === 'overdue'
-                ? 'bg-[#9a3d3d] text-white border-[#9a3d3d]'
-                : 'bg-white text-[#9a3d3d] border-[#e3ebe3] hover:border-[#d99b9b]'
-            }`}>
-            Просроченные
-          </button>
-          {/* Важные задачи */}
-          <button onClick={() => setView(view === 'important' ? calView : 'important')}
-            className={`w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-              view === 'important'
-                ? 'bg-[#38513e] text-white border-[#38513e]'
-                : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
-            }`}>
-            Важные задачи
-          </button>
-          {/* Заметки */}
-          <button onClick={() => setView(view === 'notes' ? calView : 'notes')}
-            className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-              view === 'notes'
-                ? 'bg-[#38513e] text-white border-[#38513e]'
-                : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
-            }`}>
-            <FileText size={15} /> Заметки
-          </button>
-          {/* Итоги */}
-          {(() => {
-            const today = new Date();
-            const daysInMon = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-            const isMonthEnd = daysInMon - today.getDate() <= 2; // последние 3 дня месяца
-            const active = view === 'summary';
+  const navItems = [
+    { id: 'day', label: 'День', icon: Calendar, active: ['day', 'week', 'weekend', 'month'].includes(view), dropdown: true },
+    { id: 'overdue', label: 'Просроченные', icon: Clock, active: view === 'overdue', badge: overdueCount, onClick: () => { setShowViewDropdown(false); setView(view === 'overdue' ? calView : 'overdue'); } },
+    { id: 'important', label: 'Важные задачи', icon: Star, active: view === 'important', onClick: () => { setShowViewDropdown(false); setView(view === 'important' ? calView : 'important'); } },
+    { id: 'notes', label: 'Заметки', icon: FileText, active: view === 'notes', onClick: () => { setShowViewDropdown(false); setView(view === 'notes' ? calView : 'notes'); } },
+    { id: 'summary', label: 'Итоги месяца', icon: BarChart3, active: view === 'summary', onClick: () => { setShowViewDropdown(false); setView(view === 'summary' ? calView : 'summary'); } },
+    { id: 'recurring', label: 'Повторяющиеся', icon: Repeat, active: false, onClick: () => { setShowViewDropdown(false); setShowRecurringModal(true); } },
+  ];
+
+  const Leaf = ({ size = 26 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="#0B5D46" aria-hidden="true">
+      <path d="M5 19c0-8 4-14 15-14 0 10-5 15-12 15-1 0-2-.3-3-1z" />
+      <path d="M5 19c2-5 5-8 9-10" stroke="#E4F0EA" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+
+  // Выпадающий список выбора/управления ежедневниками
+  const PlannerPicker = ({ compact }) => (
+    <div className="relative">
+      {compact ? (
+        <button onClick={() => setShowPlannerDropdown(v => !v)} aria-label={`Ежедневник: ${plannerName}`}
+          className="w-11 h-11 border border-line bg-surface-soft rounded-[14px] flex items-center justify-center">
+          <span className="w-[11px] h-[11px] rounded-full" style={{ backgroundColor: currentColorInfo?.dot || '#12805F' }} />
+        </button>
+      ) : (
+        <button onClick={() => setShowPlannerDropdown(v => !v)}
+          className="w-full flex items-center gap-2 min-h-[44px] px-3 border border-line bg-surface-soft rounded-[14px] text-sm font-semibold text-ink">
+          <span className="w-[9px] h-[9px] rounded-full shrink-0" style={{ backgroundColor: currentColorInfo?.dot || '#12805F' }} />
+          <span className="flex-1 text-left truncate">{plannerName}</span>
+          <ChevronDown size={14} className={`text-ink-3 transition-transform ${showPlannerDropdown ? 'rotate-180' : ''}`} />
+        </button>
+      )}
+      {showPlannerDropdown && (
+        <div className="absolute top-full left-0 mt-1 bg-surface border border-line rounded-2xl shadow-card z-50 min-w-[220px] py-1.5"
+          onMouseLeave={() => setShowPlannerDropdown(false)}>
+          {planners.map(p => {
+            const pColor = PLANNER_COLORS.find(c => c.id === p.color);
             return (
-              <button onClick={() => setView(active ? calView : 'summary')}
-                title={isMonthEnd ? 'Пора подвести итоги!' : 'Итоги месяца'}
-                className={`w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all ${
-                  active
-                    ? 'bg-[#38513e] text-white border-[#38513e]'
-                    : isMonthEnd
-                      ? 'bg-[#38513e] text-white border-[#38513e] shadow-[0_0_0_3px_rgba(56,81,62,0.15)] animate-pulse'
-                      : 'bg-white text-[#38513e] border-[#e3ebe3] hover:border-[#6b8e6b]'
-                }`}>
-                <BarChart3 size={16} />
-                Итоги
-                {isMonthEnd && !active && <span className="text-[10px] hidden sm:inline">• пора!</span>}
+              <button key={p.id} onClick={() => { onSelectPlanner(p.id); setShowPlannerDropdown(false); }}
+                className={`w-full text-left px-3.5 py-2 text-sm flex items-center gap-2.5 hover:bg-surface-soft transition-colors ${p.id === currentPlannerId ? 'text-ink font-semibold' : 'text-ink-2'}`}>
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: pColor?.dot }} />
+                {p.name}
+                {p.id === currentPlannerId && <Check size={13} className="ml-auto text-accent" />}
               </button>
             );
-          })()}
+          })}
+          <div className="border-t border-divider mt-1 pt-1">
+            <button onClick={() => { onBack(); setShowPlannerDropdown(false); }}
+              className="w-full text-left px-3.5 py-2 text-sm text-ink-3 hover:bg-surface-soft transition-colors">
+              Все ежедневники
+            </button>
+            <button onClick={() => { onNewPlanner(); setShowPlannerDropdown(false); }}
+              className="w-full text-left px-3.5 py-2 text-sm text-ink hover:bg-surface-soft transition-colors flex items-center gap-1.5">
+              <Plus size={14} className="text-accent" /> Создать новый
+            </button>
+          </div>
         </div>
+      )}
+    </div>
+  );
 
-        {view === 'day' && (getDaySlot() === 5 ? renderWeekendView() : getDaySlot() === 6 ? renderWeekSummaryView() : renderDayView())}
-        {view === 'week' && renderWeekView()}
-        {view === 'weekend' && renderWeekendView()}
-        {view === 'month' && renderMonthView()}
-        {view === 'important' && renderImportantView()}
-        {view === 'notes' && renderNotesView()}
-        {view === 'overdue' && renderOverdueView()}
-        {view === 'summary' && renderSummaryView()}
+  // Выпадающий список День/Неделя/Месяц
+  const ViewDropdownMenu = ({ up }) => (
+    showViewDropdown ? (
+      <div className={`absolute ${up ? 'bottom-full mb-2' : 'top-full mt-1'} left-0 bg-surface border border-line rounded-xl shadow-card z-50 min-w-[150px] py-1`}
+        onMouseLeave={() => setShowViewDropdown(false)}>
+        {[{ id: 'day', label: 'День' }, { id: 'week', label: 'Неделя' }, { id: 'month', label: 'Месяц' }].map(o => (
+          <button key={o.id} onClick={() => { setView(o.id); setCalView(o.id); setDayStage('day'); setShowViewDropdown(false); }}
+            className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-surface-soft transition-colors ${view === o.id ? 'text-ink font-semibold' : 'text-ink-2'}`}>
+            {o.label}
+            {view === o.id && <Check size={13} className="ml-auto text-accent" />}
+          </button>
+        ))}
       </div>
+    ) : null
+  );
+
+  // Поповер-календарь (под датой в баннере)
+  const CalendarPopover = () => {
+    if (!showCalendar) return null;
+    const y = calMonth.getFullYear(), m = calMonth.getMonth();
+    const firstIdx = (new Date(y, m, 1).getDay() + 6) % 7;
+    const daysInM = new Date(y, m + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < firstIdx; i++) cells.push(null);
+    for (let d = 1; d <= daysInM; d++) cells.push(d);
+    const monthLabel = calMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+    return (
+      <div className="absolute left-0 top-full mt-3.5 w-80 box-border p-4 bg-surface rounded-[22px] shadow-cal z-50 text-ink" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-2">
+          <button aria-label="Предыдущий месяц" onClick={() => setCalMonth(new Date(y, m - 1, 1))}
+            className="w-11 h-11 bg-[#F0F7F3] rounded-[14px] flex items-center justify-center"><ChevronLeft size={18} /></button>
+          <span className="text-base font-bold capitalize">{monthLabel}</span>
+          <button aria-label="Следующий месяц" onClick={() => setCalMonth(new Date(y, m + 1, 1))}
+            className="w-11 h-11 bg-[#F0F7F3] rounded-[14px] flex items-center justify-center"><ChevronRight size={18} /></button>
+        </div>
+        <div className="grid grid-cols-7 gap-0.5 text-center text-xs text-ink-3 mb-1">
+          {['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map(d => <span key={d}>{d}</span>)}
+        </div>
+        <div className="grid grid-cols-7 gap-0.5 text-center text-[15px] font-medium">
+          {cells.map((d, i) => {
+            if (!d) return <span key={i} className="h-[38px]" />;
+            const cellStr = formatDate(new Date(y, m, d));
+            const isSel = cellStr === bDateStr;
+            return (
+              <button key={i} onClick={() => { setCurrentDate(new Date(y, m, d)); setDayStage('day'); setView('day'); setCalView('day'); setShowCalendar(false); }}
+                className={`h-[38px] rounded-xl flex items-center justify-center ${isSel ? 'bg-primary text-white font-bold' : 'hover:bg-surface-soft'}`}>
+                {d}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Баннер дня: дата + календарь + кольцо прогресса + Добавить
+  const DayBanner = () => (
+    <div className="relative z-[5] h-[96px] shrink-0 rounded-[24px] text-white flex items-center px-5 sm:px-7 shadow-banner overflow-visible"
+      style={{ background: 'linear-gradient(120deg, #0A4D3A, #0B6A4F 55%, #14876A)' }}>
+      <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
+        <svg width="100%" height="100%" viewBox="0 0 900 96" preserveAspectRatio="xMaxYMid slice"><circle cx="760" cy="10" r="90" fill="#fff" fillOpacity="0.06" /><circle cx="860" cy="90" r="70" fill="#fff" fillOpacity="0.06" /><circle cx="600" cy="110" r="60" fill="#fff" fillOpacity="0.05" /></svg>
+      </div>
+      <div className="relative">
+        <button aria-label="Открыть календарь" aria-expanded={showCalendar} onClick={() => { setCalMonth(new Date(currentDate)); setShowCalendar(v => !v); }}
+          className="border-0 bg-transparent p-0 text-left text-white">
+          <span className="block text-[13px] sm:text-sm font-medium capitalize" style={{ color: '#BFE5D6' }}>{bWeekday}</span>
+          <span className="flex items-center gap-2 sm:gap-3 text-[22px] sm:text-[30px] font-bold leading-tight tracking-[-0.5px]">
+            {bDateLabel}
+            <span className="w-[30px] h-[30px] sm:w-[34px] sm:h-[34px] rounded-[10px] sm:rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.18)' }}>
+              <Calendar size={17} className="text-white" />
+            </span>
+          </span>
+        </button>
+        <CalendarPopover />
+      </div>
+      <span className="flex-1" />
+      <div className="flex items-center gap-3 mr-1 sm:mr-5">
+        <div className="relative w-12 h-12 sm:w-[52px] sm:h-[52px]">
+          <svg viewBox="0 0 96 96" className="w-full h-full">
+            <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="12" />
+            <circle cx="48" cy="48" r="40" fill="none" stroke="#fff" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${ringDone} ${ringC - ringDone}`} transform="rotate(-90 48 48)" />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-[13px] sm:text-sm font-bold">{bDone}/{bTotal || 0}</div>
+        </div>
+        <div className="hidden sm:block">
+          <div className="text-[15px] font-bold">Выполнено {bDone} из {bTotal}</div>
+          <div className="text-[13px]" style={{ color: '#BFE5D6' }}>{bLeft > 0 ? `Осталось ${bLeft}` : 'Всё готово'}</div>
+        </div>
+      </div>
+      <button onClick={() => { newTaskInputRef.current && newTaskInputRef.current.focus(); }}
+        className="relative flex items-center gap-2 min-h-[44px] px-4 sm:px-5 rounded-[22px] bg-white text-primary text-sm font-bold">
+        <Plus size={18} /> <span className="hidden sm:inline">Добавить</span>
+      </button>
+    </div>
+  );
+
+  const viewContent = (
+    <>
+      {view === 'day' && (getDaySlot() === 5 ? renderWeekendView() : getDaySlot() === 6 ? renderWeekSummaryView() : renderDayView())}
+      {view === 'week' && renderWeekView()}
+      {view === 'weekend' && renderWeekendView()}
+      {view === 'month' && renderMonthView()}
+      {view === 'important' && renderImportantView()}
+      {view === 'notes' && renderNotesView()}
+      {view === 'overdue' && renderOverdueView()}
+      {view === 'summary' && renderSummaryView()}
+    </>
+  );
+
+  return (
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #E4F0EA, #F4F9F6)' }}>
+      {showRecurringModal && <RecurringModal />}
+
+      <div className="flex gap-4 p-2 sm:p-4 min-h-screen">
+        {/* ===== Боковая панель (десктоп) ===== */}
+        {sidebarCompact ? (
+          <aside className="hidden lg:flex w-[76px] shrink-0 bg-surface rounded-[24px] shadow-card py-5 flex-col items-center">
+            <Leaf size={30} />
+            <button aria-label="Развернуть панель с подписями" aria-expanded="false" onClick={toggleSidebar}
+              className="w-11 h-11 mt-3.5 bg-surface-soft rounded-[14px] flex items-center justify-center text-ink-2"><ChevronsRight size={19} /></button>
+            <div className="my-3.5"><PlannerPicker compact /></div>
+            {navItems.map(n => (
+              <div key={n.id} className="relative">
+                <button aria-label={n.badge ? `${n.label}: ${n.badge}` : n.label} aria-current={n.active ? 'page' : undefined}
+                  onClick={n.dropdown ? () => setShowViewDropdown(v => !v) : n.onClick}
+                  className={`relative w-12 h-12 mb-1.5 rounded-[14px] flex items-center justify-center ${n.active ? 'bg-nav-active text-primary' : 'text-ink-2 hover:bg-surface-soft'}`}>
+                  <n.icon size={21} />
+                  {n.badge > 0 && <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-[9px] bg-danger-badge text-danger text-[11px] font-bold flex items-center justify-center">{n.badge}</span>}
+                </button>
+                {n.dropdown && <ViewDropdownMenu />}
+              </div>
+            ))}
+            <div className="flex-1" />
+            <button onClick={onSignOut} aria-label={`Профиль: ${user.displayName || user.email}, выйти`}
+              className="w-[38px] h-[38px] rounded-full bg-primary text-white flex items-center justify-center font-bold">
+              {(user.displayName || user.email || 'A').charAt(0).toUpperCase()}
+            </button>
+          </aside>
+        ) : (
+          <aside className="hidden lg:flex w-[232px] shrink-0 bg-surface rounded-[24px] shadow-card px-3.5 pt-5 pb-4 flex-col">
+            <div className="flex items-center gap-2.5 px-2.5 pb-4 font-extrabold text-xl text-primary">
+              <Leaf size={28} /> DayBook
+              <span className="flex-1" />
+              <button aria-label="Свернуть панель до иконок" aria-expanded="true" onClick={toggleSidebar}
+                className="w-11 h-11 -my-3 -mr-2 bg-surface-soft rounded-[14px] flex items-center justify-center text-ink-2"><ChevronsLeft size={19} /></button>
+            </div>
+            <div className="mb-4"><PlannerPicker /></div>
+            {navItems.map(n => (
+              <div key={n.id} className="relative mb-1">
+                <button aria-current={n.active ? 'page' : undefined}
+                  onClick={n.dropdown ? () => setShowViewDropdown(v => !v) : n.onClick}
+                  className={`w-full flex items-center gap-3 min-h-[46px] px-3.5 rounded-[14px] text-[15px] ${n.active ? 'bg-nav-active text-primary font-bold' : 'text-ink-2 font-medium hover:bg-surface-soft'}`}>
+                  <n.icon size={20} />
+                  <span className="flex-1 text-left">{n.label}</span>
+                  {n.dropdown && <ChevronDown size={15} className={`transition-transform ${showViewDropdown ? 'rotate-180' : ''}`} />}
+                  {n.badge > 0 && <span className="min-w-[22px] h-[22px] px-1.5 rounded-[11px] bg-danger-badge text-danger text-xs font-bold flex items-center justify-center">{n.badge}</span>}
+                </button>
+                {n.dropdown && <ViewDropdownMenu />}
+              </div>
+            ))}
+            <div className="flex-1" />
+            <div className="flex items-center gap-2.5 px-2 pt-3 border-t border-divider">
+              <span className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold">{(user.displayName || user.email || 'A').charAt(0).toUpperCase()}</span>
+              <span className="flex-1 text-sm font-semibold truncate">{user.displayName || user.email}</span>
+              <button onClick={onSignOut} className="min-h-[44px] text-[13px] text-ink-3 hover:text-ink flex items-center gap-1"><LogOut size={15} /></button>
+            </div>
+          </aside>
+        )}
+
+        {/* ===== Правая область ===== */}
+        <main className="flex-1 min-w-0 flex flex-col gap-3.5 pb-20 lg:pb-0">
+          {/* Мобильная шапка */}
+          <div className="lg:hidden flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 font-extrabold text-lg text-primary"><Leaf size={24} /> DayBook</div>
+            <div className="flex items-center gap-2">
+              <PlannerPicker />
+              <button onClick={onSignOut} className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">{(user.displayName || user.email || 'A').charAt(0).toUpperCase()}</button>
+            </div>
+          </div>
+
+          {/* Поиск (десктоп) */}
+          <div className="hidden lg:flex items-center gap-3">
+            <div className="flex-1 max-w-[420px] flex items-center gap-2.5 h-11 px-4 rounded-[22px] bg-surface shadow-soft text-ink-3 text-sm">
+              <Search size={18} />
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Поиск по дневнику…"
+                className="flex-1 bg-transparent focus:outline-none text-ink placeholder-ink-3" />
+            </div>
+          </div>
+
+          {showBanner && <DayBanner />}
+
+          {viewContent}
+        </main>
+      </div>
+
+      {/* ===== Нижняя панель (мобайл) ===== */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-surface shadow-bottomnav flex items-center justify-around px-1.5 pb-1.5 z-40">
+        {[
+          { id: 'day', label: 'День', icon: Calendar, active: ['day', 'week', 'weekend', 'month'].includes(view), dropdown: true },
+          { id: 'overdue', label: 'Просроч.', icon: Clock, active: view === 'overdue', badge: overdueCount, onClick: () => setView(view === 'overdue' ? calView : 'overdue') },
+          { id: 'important', label: 'Важные', icon: Star, active: view === 'important', onClick: () => setView(view === 'important' ? calView : 'important') },
+          { id: 'notes', label: 'Заметки', icon: FileText, active: view === 'notes', onClick: () => setView(view === 'notes' ? calView : 'notes') },
+          { id: 'summary', label: 'Итоги', icon: BarChart3, active: view === 'summary', onClick: () => setView(view === 'summary' ? calView : 'summary') },
+        ].map(n => (
+          <div key={n.id} className="relative">
+            <button onClick={n.dropdown ? () => setShowViewDropdown(v => !v) : n.onClick}
+              className={`relative w-[66px] h-[56px] rounded-2xl flex flex-col items-center justify-center gap-0.5 text-[11px] font-${n.active ? 'bold' : 'semibold'} ${n.active ? 'bg-nav-active text-primary' : 'text-ink-3'}`}>
+              <n.icon size={22} />
+              {n.label}
+              {n.badge > 0 && <span className="absolute top-1 right-2.5 min-w-[18px] h-[18px] px-1 rounded-[9px] bg-danger text-white text-[11px] font-bold flex items-center justify-center">{n.badge}</span>}
+            </button>
+            {n.dropdown && <ViewDropdownMenu up />}
+          </div>
+        ))}
+      </nav>
     </div>
   );
 };

@@ -15,9 +15,67 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Golos Text', 'system-ui', 'sans-serif'] },
+            colors: {
+              surface: '#FFFFFF',
+              'surface-soft': '#F1F8F4',
+              primary: '#0B5D46',
+              accent: '#12805F',
+              ink: '#14261F',
+              'ink-2': '#4C645B',
+              'ink-3': '#6B8078',
+              line: '#DDEAE4',
+              divider: '#E6EFEA',
+              'nav-active': '#DDEFE6',
+              'details-btn': '#E3F1EB',
+              dashed: '#BBD5C9',
+              'cb-border': '#9DB8AC',
+              'done-text': '#8BA399',
+              danger: '#C0392B',
+              'danger-bg': '#FDECEC',
+              'danger-chip': '#FAD3D3',
+              'danger-badge': '#FCE3E3',
+              'danger-btn': '#FDF3F3',
+              'danger-btn-border': '#F3CFCF',
+              banner1: '#0A4D3A',
+              banner2: '#0B6A4F',
+              banner3: '#14876A',
+              'banner-sub': '#BFE5D6',
+              paper: '#FBF7EC',
+              'paper-border': '#E4DAC0',
+              'paper-margin': '#E3A9A0',
+              'paper-note': '#F3EBD6',
+              'paper-num': '#A39B80',
+              'paper-muted': '#7C7560',
+              'paper-cb': '#7FA08F',
+              'paper-important': '#F8DDD7',
+              'tag-green-bg': '#DDF3E7',
+              'tag-green-text': '#1E7F4F',
+              'tag-blue-bg': '#E1EBFB',
+              'tag-blue-text': '#3566B8',
+            },
+            boxShadow: {
+              card: '0 4px 24px rgba(16,71,54,0.08)',
+              banner: '0 8px 24px rgba(11,93,70,0.25)',
+              soft: '0 2px 12px rgba(16,71,54,0.06)',
+              cal: '0 20px 48px rgba(10,60,45,0.28)',
+              bottomnav: '0 -4px 24px rgba(16,71,54,0.08)',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body { font-family: 'Golos Text', system-ui, sans-serif; }
+      .font-serif-note { font-family: Georgia, 'Times New Roman', serif; }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
