@@ -2188,6 +2188,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
         <svg width="100%" height="100%" viewBox="0 0 900 96" preserveAspectRatio="xMaxYMid slice"><circle cx="760" cy="10" r="90" fill="#fff" fillOpacity="0.06" /><circle cx="860" cy="90" r="70" fill="#fff" fillOpacity="0.06" /><circle cx="600" cy="110" r="60" fill="#fff" fillOpacity="0.05" /></svg>
       </div>
+      <button aria-label="Предыдущий день" onClick={() => navigate(-1)}
+        className="w-9 h-9 mr-2 sm:mr-3 rounded-full flex items-center justify-center shrink-0 hover:bg-white/15 transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
+        <ChevronLeft size={20} className="text-white" />
+      </button>
       <div className="relative">
         <button aria-label="Открыть календарь" aria-expanded={showCalendar} onClick={() => { setCalMonth(new Date(currentDate)); setShowCalendar(v => !v); }}
           className="border-0 bg-transparent p-0 text-left text-white">
@@ -2201,6 +2205,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </button>
         <CalendarPopover />
       </div>
+      <button aria-label="Следующий день" onClick={() => navigate(1)}
+        className="w-9 h-9 ml-2 sm:ml-3 rounded-full flex items-center justify-center shrink-0 hover:bg-white/15 transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
+        <ChevronRight size={20} className="text-white" />
+      </button>
       <span className="flex-1" />
       <div className="flex items-center gap-3 mr-1 sm:mr-5">
         <div className="relative w-12 h-12 sm:w-[52px] sm:h-[52px]">
