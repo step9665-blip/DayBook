@@ -31,11 +31,11 @@ const TagInput = ({ tags = [], onChange, placeholder = 'Добавить тег.
   const removeTag = (tag) => onChange(tags.filter(t => t !== tag));
 
   return (
-    <div className="flex flex-wrap gap-1 items-center min-h-[28px] px-2 py-1 border border-[#e3ebe3] rounded-md bg-white focus-within:border-[#38513e] transition-colors">
+    <div className="flex flex-wrap gap-1 items-center min-h-[28px] px-2 py-1 border border-[#DDEAE4] rounded-md bg-white focus-within:border-[#0B5D46] transition-colors">
       {tags.map(tag => (
-        <span key={tag} className="flex items-center gap-1 px-1.5 py-0.5 bg-[#eef3ee] text-[#38513e] text-xs rounded">
+        <span key={tag} className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F1F8F4] text-[#0B5D46] text-xs rounded">
           #{tag}
-          <button type="button" onClick={() => removeTag(tag)} className="text-[#8a9d8c] hover:text-[#38513e] leading-none">×</button>
+          <button type="button" onClick={() => removeTag(tag)} className="text-[#6B8078] hover:text-[#0B5D46] leading-none">×</button>
         </span>
       ))}
       <input
@@ -46,7 +46,7 @@ const TagInput = ({ tags = [], onChange, placeholder = 'Добавить тег.
           if (e.key === 'Backspace' && !input && tags.length) removeTag(tags[tags.length - 1]);
         }}
         placeholder={tags.length === 0 ? placeholder : ''}
-        className="text-xs outline-none bg-transparent min-w-[80px] text-[#38513e] placeholder-[#b0c3b2]"
+        className="text-xs outline-none bg-transparent min-w-[80px] text-[#0B5D46] placeholder-[#9DB8AC]"
       />
     </div>
   );
@@ -57,14 +57,14 @@ const LoginScreen = () => {
   const handleLogin = () => signInWithPopup(auth, googleProvider).catch(err => console.error('Login error:', err));
 
   return (
-    <div className="min-h-screen bg-[#f4f7f4] flex items-center justify-center">
-      <div className="bg-white rounded-lg border border-[#e3ebe3] p-10 max-w-sm w-full mx-4 text-center">
-        <BookOpen size={36} className="mx-auto text-[#38513e] mb-5" />
-        <h1 className="text-2xl font-semibold text-[#38513e] mb-1 tracking-tight">DayBook</h1>
-        <p className="text-sm text-[#8a9d8c] mb-8">Ваш личный ежедневник</p>
+    <div className="min-h-screen bg-[#F1F8F4] flex items-center justify-center">
+      <div className="bg-white rounded-lg border border-[#DDEAE4] p-10 max-w-sm w-full mx-4 text-center">
+        <BookOpen size={36} className="mx-auto text-[#0B5D46] mb-5" />
+        <h1 className="text-2xl font-semibold text-[#0B5D46] mb-1 tracking-tight">DayBook</h1>
+        <p className="text-sm text-[#6B8078] mb-8">Ваш личный ежедневник</p>
         <button
           onClick={handleLogin}
-          className="w-full px-5 py-2.5 bg-[#38513e] text-white text-sm font-medium rounded-md hover:bg-[#2a3d2f] transition-colors flex items-center justify-center gap-2.5"
+          className="w-full px-5 py-2.5 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors flex items-center justify-center gap-2.5"
         >
           <svg width="16" height="16" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
@@ -117,67 +117,67 @@ const NoteEditor = ({ note, onChangeTitle, onChangeContent, onBack, onDelete }) 
     <button type="button" title={title}
       onMouseDown={e => e.preventDefault()}
       onClick={onClick}
-      className={`p-1.5 rounded-md transition-colors text-[#5a7a5a] hover:bg-[#eef3ee] hover:text-[#38513e] ${active ? 'bg-[#eef3ee] text-[#38513e]' : ''}`}>
+      className={`p-1.5 rounded-md transition-colors text-[#4C645B] hover:bg-[#F1F8F4] hover:text-[#0B5D46] ${active ? 'bg-[#F1F8F4] text-[#0B5D46]' : ''}`}>
       {children}
     </button>
   );
 
   return (
-    <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
+    <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
       <style>{`
         .note-editor:focus { outline: none; }
-        .note-editor h2 { font-size: 1.5rem; font-weight: 600; margin: 0.6em 0 0.3em; color: #38513e; }
+        .note-editor h2 { font-size: 1.5rem; font-weight: 600; margin: 0.6em 0 0.3em; color: #0B5D46; }
         .note-editor ul { list-style: disc; padding-left: 1.6em; margin: 0.3em 0; }
         .note-editor ol { list-style: decimal; padding-left: 1.6em; margin: 0.3em 0; }
         .note-editor p { margin: 0.2em 0; }
         .note-editor .cl-item { display: flex; align-items: flex-start; gap: 0.5em; margin: 0.15em 0; }
-        .note-editor .cl-item input { margin-top: 0.35em; width: 15px; height: 15px; accent-color: #4a6b4a; cursor: pointer; flex-shrink: 0; }
-        .note-editor .cl-item input:checked + span { text-decoration: line-through; color: #b0c3b2; }
-        .note-editor:empty:before { content: attr(data-placeholder); color: #b0c3b2; }
+        .note-editor .cl-item input { margin-top: 0.35em; width: 15px; height: 15px; accent-color: #12805F; cursor: pointer; flex-shrink: 0; }
+        .note-editor .cl-item input:checked + span { text-decoration: line-through; color: #9DB8AC; }
+        .note-editor:empty:before { content: attr(data-placeholder); color: #9DB8AC; }
       `}</style>
 
       {/* Шапка */}
-      <div className="flex items-center gap-2 px-3 sm:px-5 py-3 border-b border-[#e3ebe3]">
+      <div className="flex items-center gap-2 px-3 sm:px-5 py-3 border-b border-[#DDEAE4]">
         <button onClick={onBack} title="К списку заметок"
-          className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors shrink-0">
+          className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors shrink-0">
           <ArrowLeft size={18} />
         </button>
         <input value={note.title}
           onChange={e => onChangeTitle(e.target.value)}
           placeholder="Название заметки"
-          className="flex-grow bg-transparent text-lg font-semibold text-[#38513e] placeholder-[#b0c3b2] focus:outline-none min-w-0" />
+          className="flex-grow bg-transparent text-lg font-semibold text-[#0B5D46] placeholder-[#9DB8AC] focus:outline-none min-w-0" />
         {confirmDelete ? (
           <div className="flex items-center gap-1 shrink-0">
             <button onClick={onDelete} className="px-2 py-1 text-xs rounded bg-red-500 text-white hover:bg-red-600 transition-colors">Удалить</button>
-            <button onClick={() => setConfirmDelete(false)} className="px-2 py-1 text-xs text-[#8a9d8c] hover:bg-[#eef3ee] rounded transition-colors">Отмена</button>
+            <button onClick={() => setConfirmDelete(false)} className="px-2 py-1 text-xs text-[#6B8078] hover:bg-[#F1F8F4] rounded transition-colors">Отмена</button>
           </div>
         ) : (
           <button onClick={() => setConfirmDelete(true)} title="Удалить заметку"
-            className="p-1.5 text-[#9bb09d] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0">
+            className="p-1.5 text-[#9DB8AC] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0">
             <Trash2 size={16} />
           </button>
         )}
       </div>
 
       {/* Панель инструментов */}
-      <div className="flex items-center gap-0.5 flex-wrap px-2 sm:px-4 py-2 border-b border-[#e3ebe3] bg-[#f9fbf9]">
+      <div className="flex items-center gap-0.5 flex-wrap px-2 sm:px-4 py-2 border-b border-[#DDEAE4] bg-[#f9fbf9]">
         <ToolbarBtn onClick={() => exec('undo')} title="Отменить (Ctrl+Z)"><Undo2 size={16} /></ToolbarBtn>
         <ToolbarBtn onClick={() => exec('redo')} title="Вернуть (Ctrl+Y)"><Redo2 size={16} /></ToolbarBtn>
-        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
+        <div className="w-px h-5 bg-[#DDEAE4] mx-1" />
         <ToolbarBtn onClick={() => exec('formatBlock', 'h2')} title="Заголовок"><Heading size={16} /></ToolbarBtn>
         <ToolbarBtn onClick={() => exec('formatBlock', 'p')} title="Обычный текст"><Type size={16} /></ToolbarBtn>
-        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
+        <div className="w-px h-5 bg-[#DDEAE4] mx-1" />
         <ToolbarBtn onClick={() => exec('bold')} title="Жирный"><Bold size={16} /></ToolbarBtn>
         <ToolbarBtn onClick={() => exec('italic')} title="Курсив"><Italic size={16} /></ToolbarBtn>
         <ToolbarBtn onClick={() => exec('underline')} title="Подчёркнутый"><Underline size={16} /></ToolbarBtn>
-        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
+        <div className="w-px h-5 bg-[#DDEAE4] mx-1" />
         <ToolbarBtn onClick={() => exec('insertUnorderedList')} title="Маркированный список"><List size={16} /></ToolbarBtn>
         <ToolbarBtn onClick={() => exec('insertOrderedList')} title="Нумерованный список"><ListOrdered size={16} /></ToolbarBtn>
         <ToolbarBtn onClick={insertChecklistItem} title="Чек-лист"><ListChecks size={16} /></ToolbarBtn>
-        <div className="w-px h-5 bg-[#e3ebe3] mx-1" />
+        <div className="w-px h-5 bg-[#DDEAE4] mx-1" />
         <select onMouseDown={e => e.stopPropagation()} defaultValue=""
           onChange={e => { exec('fontSize', e.target.value); e.target.value = ''; }}
-          className="text-xs text-[#5a7a5a] bg-transparent border border-[#e3ebe3] rounded-md px-1.5 py-1 focus:outline-none cursor-pointer">
+          className="text-xs text-[#4C645B] bg-transparent border border-[#DDEAE4] rounded-md px-1.5 py-1 focus:outline-none cursor-pointer">
           <option value="" disabled>Размер</option>
           <option value="1">Мелкий</option>
           <option value="3">Обычный</option>
@@ -189,7 +189,7 @@ const NoteEditor = ({ note, onChangeTitle, onChangeContent, onBack, onDelete }) 
       {/* Рабочая область */}
       <div
         ref={editorRef}
-        className="note-editor px-4 sm:px-8 py-5 min-h-[50vh] text-sm text-[#37352f] leading-relaxed focus:outline-none"
+        className="note-editor px-4 sm:px-8 py-5 min-h-[50vh] text-sm text-[#14261F] leading-relaxed focus:outline-none"
         contentEditable
         suppressContentEditableWarning
         data-placeholder="Начните писать..."
@@ -266,15 +266,15 @@ const PlannerApp = () => {
   const handleSignOut = () => signOut(auth).catch(err => console.error('Sign out error:', err));
 
   if (authLoading) return (
-    <div className="min-h-screen bg-[#f4f7f4] flex items-center justify-center">
-      <div className="text-[#8a9d8c] text-sm">Загрузка...</div>
+    <div className="min-h-screen bg-[#F1F8F4] flex items-center justify-center">
+      <div className="text-[#6B8078] text-sm">Загрузка...</div>
     </div>
   );
 
   if (!user) return <LoginScreen />;
 
   return (
-    <div className="min-h-screen bg-[#f4f7f4]">
+    <div className="min-h-screen bg-[#F1F8F4]">
       {view === 'home' ? (
         <HomeView
           planners={planners}
@@ -333,35 +333,35 @@ const HomeView = ({
 
       {editingPlanner && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg border border-[#e3ebe3] p-7 w-full max-w-md mx-4 shadow-lg">
-            <h2 className="text-base font-semibold text-[#38513e] mb-5">Редактировать ежедневник</h2>
+          <div className="bg-white rounded-lg border border-[#DDEAE4] p-7 w-full max-w-md mx-4 shadow-lg">
+            <h2 className="text-base font-semibold text-[#0B5D46] mb-5">Редактировать ежедневник</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#8a9d8c] mb-1.5 uppercase tracking-wide">Название</label>
+                <label className="block text-xs font-medium text-[#6B8078] mb-1.5 uppercase tracking-wide">Название</label>
                 <input
                   type="text" value={editName} onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#e3ebe3] rounded-md text-sm text-[#38513e] focus:outline-none focus:border-[#38513e]"
+                  className="w-full px-3 py-2 border border-[#DDEAE4] rounded-md text-sm text-[#0B5D46] focus:outline-none focus:border-[#0B5D46]"
                   autoFocus onKeyDown={e => e.key === 'Enter' && onUpdatePlanner(editingPlanner.id, editName, editColor)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#8a9d8c] mb-2 uppercase tracking-wide">Цвет</label>
+                <label className="block text-xs font-medium text-[#6B8078] mb-2 uppercase tracking-wide">Цвет</label>
                 <div className="flex gap-2.5">
                   {PLANNER_COLORS.map(color => (
                     <button key={color.id} onClick={() => setEditColor(color.id)}
                       style={{ backgroundColor: color.dot }}
-                      className={`w-7 h-7 rounded-full transition-transform ${editColor === color.id ? 'ring-2 ring-offset-2 ring-[#38513e] scale-110' : 'hover:scale-110'}`}
+                      className={`w-7 h-7 rounded-full transition-transform ${editColor === color.id ? 'ring-2 ring-offset-2 ring-[#0B5D46] scale-110' : 'hover:scale-110'}`}
                     />
                   ))}
                 </div>
               </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={() => onUpdatePlanner(editingPlanner.id, editName, editColor)}
-                  className="flex-1 px-4 py-2 bg-[#38513e] text-white text-sm font-medium rounded-md hover:bg-[#2a3d2f] transition-colors flex items-center justify-center gap-1.5">
+                  className="flex-1 px-4 py-2 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors flex items-center justify-center gap-1.5">
                   <Check size={14} /> Сохранить
                 </button>
                 <button onClick={() => setEditingPlanner(null)}
-                  className="flex-1 px-4 py-2 bg-[#eef3ee] text-[#38513e] text-sm font-medium rounded-md hover:bg-[#e3ebe3] transition-colors">
+                  className="flex-1 px-4 py-2 bg-[#F1F8F4] text-[#0B5D46] text-sm font-medium rounded-md hover:bg-[#DDEAE4] transition-colors">
                   Отмена
                 </button>
               </div>
@@ -372,47 +372,47 @@ const HomeView = ({
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8 pt-2">
         <div className="flex items-center gap-2.5">
-          <BookOpen size={22} className="text-[#38513e]" />
-          <h1 className="text-xl font-semibold text-[#38513e] tracking-tight">Мои ежедневники</h1>
+          <BookOpen size={22} className="text-[#0B5D46]" />
+          <h1 className="text-xl font-semibold text-[#0B5D46] tracking-tight">Мои ежедневники</h1>
         </div>
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-xs text-[#8a9d8c] hidden sm:inline">{user.displayName || user.email}</span>
+          <span className="text-xs text-[#6B8078] hidden sm:inline">{user.displayName || user.email}</span>
           <button onClick={onSignOut}
-            className="px-3 py-1.5 text-xs text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-md transition-colors">
+            className="px-3 py-1.5 text-xs text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-md transition-colors">
             Выйти
           </button>
         </div>
       </div>
 
       {showNewPlannerForm ? (
-        <div className="bg-white rounded-lg border border-[#e3ebe3] p-6 mb-6">
-          <h2 className="text-sm font-semibold text-[#38513e] mb-4">Новый ежедневник</h2>
+        <div className="bg-white rounded-lg border border-[#DDEAE4] p-6 mb-6">
+          <h2 className="text-sm font-semibold text-[#0B5D46] mb-4">Новый ежедневник</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#8a9d8c] mb-1.5 uppercase tracking-wide">Название</label>
+              <label className="block text-xs font-medium text-[#6B8078] mb-1.5 uppercase tracking-wide">Название</label>
               <input type="text" value={newPlannerName} onChange={e => setNewPlannerName(e.target.value)}
                 placeholder="Например: Проект X, Личные задачи..."
-                className="w-full px-3 py-2 border border-[#e3ebe3] rounded-md text-sm text-[#38513e] placeholder-[#b0c3b2] focus:outline-none focus:border-[#38513e]"
+                className="w-full px-3 py-2 border border-[#DDEAE4] rounded-md text-sm text-[#0B5D46] placeholder-[#9DB8AC] focus:outline-none focus:border-[#0B5D46]"
                 autoFocus onKeyDown={e => e.key === 'Enter' && onCreatePlanner()} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#8a9d8c] mb-2 uppercase tracking-wide">Цвет</label>
+              <label className="block text-xs font-medium text-[#6B8078] mb-2 uppercase tracking-wide">Цвет</label>
               <div className="flex gap-2.5">
                 {PLANNER_COLORS.map(color => (
                   <button key={color.id} onClick={() => setNewPlannerColor(color.id)}
                     style={{ backgroundColor: color.dot }}
-                    className={`w-7 h-7 rounded-full transition-transform ${newPlannerColor === color.id ? 'ring-2 ring-offset-2 ring-[#38513e] scale-110' : 'hover:scale-110'}`}
+                    className={`w-7 h-7 rounded-full transition-transform ${newPlannerColor === color.id ? 'ring-2 ring-offset-2 ring-[#0B5D46] scale-110' : 'hover:scale-110'}`}
                   />
                 ))}
               </div>
             </div>
             <div className="flex gap-2 pt-1">
               <button onClick={onCreatePlanner}
-                className="flex-1 px-4 py-2 bg-[#38513e] text-white text-sm font-medium rounded-md hover:bg-[#2a3d2f] transition-colors flex items-center justify-center gap-1.5">
+                className="flex-1 px-4 py-2 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors flex items-center justify-center gap-1.5">
                 <Plus size={14} /> Создать
               </button>
               <button onClick={() => { setShowNewPlannerForm(false); setNewPlannerName(''); setNewPlannerColor('blue'); }}
-                className="flex-1 px-4 py-2 bg-[#eef3ee] text-[#38513e] text-sm font-medium rounded-md hover:bg-[#e3ebe3] transition-colors">
+                className="flex-1 px-4 py-2 bg-[#F1F8F4] text-[#0B5D46] text-sm font-medium rounded-md hover:bg-[#DDEAE4] transition-colors">
                 Отмена
               </button>
             </div>
@@ -420,17 +420,17 @@ const HomeView = ({
         </div>
       ) : (
         <button onClick={() => setShowNewPlannerForm(true)}
-          className="mb-6 flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-md transition-colors">
+          className="mb-6 flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-md transition-colors">
           <Plus size={16} /> Новый ежедневник
         </button>
       )}
 
       {planners.length === 0 ? (
         <div className="text-center py-20">
-          <BookOpen size={40} className="mx-auto text-[#e3ebe3] mb-3" />
-          <p className="text-sm text-[#8a9d8c] mb-4">Ежедневников нет</p>
+          <BookOpen size={40} className="mx-auto text-[#DDEAE4] mb-3" />
+          <p className="text-sm text-[#6B8078] mb-4">Ежедневников нет</p>
           <button onClick={() => setShowNewPlannerForm(true)}
-            className="px-4 py-2 bg-[#38513e] text-white text-sm font-medium rounded-md hover:bg-[#2a3d2f] transition-colors inline-flex items-center gap-1.5">
+            className="px-4 py-2 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors inline-flex items-center gap-1.5">
             <Plus size={14} /> Создать ежедневник
           </button>
         </div>
@@ -440,24 +440,24 @@ const HomeView = ({
             const colorInfo = PLANNER_COLORS.find(c => c.id === planner.color);
             return (
               <div key={planner.id}
-                className="group bg-white rounded-2xl border border-[#e3ebe3] hover:border-[#6b8e6b] hover:shadow-[0_4px_20px_rgba(56,81,62,0.08)] transition-all cursor-pointer overflow-hidden"
+                className="group bg-white rounded-2xl border border-[#DDEAE4] hover:border-[#12805F] hover:shadow-[0_4px_20px_rgba(16,71,54,0.08)] transition-all cursor-pointer overflow-hidden"
                 onClick={() => onOpenPlanner(planner)}>
                 <div className="h-1 w-full" style={{ backgroundColor: colorInfo?.dot }} />
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-medium text-[#38513e] leading-snug">{planner.name}</h3>
+                    <h3 className="text-sm font-medium text-[#0B5D46] leading-snug">{planner.name}</h3>
                     <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ml-2 shrink-0">
                       <button onClick={e => openEdit(e, planner)}
-                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded transition-colors">
+                        className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded transition-colors">
                         <Pencil size={13} />
                       </button>
                       <button onClick={e => { e.stopPropagation(); onDeletePlanner(planner.id); }}
-                        className="p-1.5 text-[#8a9d8c] hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+                        className="p-1.5 text-[#6B8078] hover:text-red-500 hover:bg-red-50 rounded transition-colors">
                         <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-[#8a9d8c]">{new Date(planner.createdAt).toLocaleDateString('ru-RU')}</p>
+                  <p className="text-xs text-[#6B8078]">{new Date(planner.createdAt).toLocaleDateString('ru-RU')}</p>
                 </div>
               </div>
             );
@@ -883,10 +883,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
     return (
       <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg border border-[#e3ebe3] p-6 w-full max-w-lg mx-4 shadow-lg max-h-[80vh] overflow-y-auto">
+        <div className="bg-white rounded-lg border border-[#DDEAE4] p-6 w-full max-w-lg mx-4 shadow-lg max-h-[80vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-[#38513e]">Повторяющиеся задачи</h2>
-            <button onClick={() => setShowRecurringModal(false)} className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded">
+            <h2 className="text-base font-semibold text-[#0B5D46]">Повторяющиеся задачи</h2>
+            <button onClick={() => setShowRecurringModal(false)} className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded">
               <X size={16} />
             </button>
           </div>
@@ -895,30 +895,30 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           {recurringTasks.length > 0 && (
             <div className="mb-5 space-y-2">
               {recurringTasks.map(rt => (
-                <div key={rt.id} className="flex items-start gap-3 p-3 bg-[#f4f7f4] rounded-lg">
+                <div key={rt.id} className="flex items-start gap-3 p-3 bg-[#F1F8F4] rounded-lg">
                   <div className="flex-grow">
-                    <p className="text-sm text-[#38513e] font-medium mb-1">{rt.text}</p>
+                    <p className="text-sm text-[#0B5D46] font-medium mb-1">{rt.text}</p>
                     <div className="flex flex-wrap gap-1 mb-1">
                       {(rt.tags || []).map(tag => (
-                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#e3ebe3] text-[#38513e] rounded">#{tag}</span>
+                        <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#DDEAE4] text-[#0B5D46] rounded">#{tag}</span>
                       ))}
                     </div>
                     {rt.mode === 'month' ? (
                       <div className="flex items-center gap-1 flex-wrap">
-                        <span className="text-[10px] text-[#8a9d8c] mr-0.5">Числа:</span>
+                        <span className="text-[10px] text-[#6B8078] mr-0.5">Числа:</span>
                         {(rt.monthDays || []).map(d => (
-                          <span key={d} className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-[#38513e] text-white">{d}</span>
+                          <span key={d} className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-[#0B5D46] text-white">{d}</span>
                         ))}
                       </div>
                     ) : (
                       <div className="flex gap-1">
                         {WEEKDAYS.map((d, i) => (
-                          <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${(rt.days || []).includes(i) ? 'bg-[#38513e] text-white' : 'bg-[#e3ebe3] text-[#8a9d8c]'}`}>{d}</span>
+                          <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${(rt.days || []).includes(i) ? 'bg-[#0B5D46] text-white' : 'bg-[#DDEAE4] text-[#6B8078]'}`}>{d}</span>
                         ))}
                       </div>
                     )}
                   </div>
-                  <button onClick={() => deleteRecurring(rt.id)} className="p-1.5 text-[#8a9d8c] hover:text-red-500 hover:bg-red-50 rounded shrink-0">
+                  <button onClick={() => deleteRecurring(rt.id)} className="p-1.5 text-[#6B8078] hover:text-red-500 hover:bg-red-50 rounded shrink-0">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -927,36 +927,36 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           )}
 
           {/* Форма добавления */}
-          <div className="border-t border-[#e3ebe3] pt-4 space-y-3">
-            <p className="text-xs font-medium text-[#8a9d8c] uppercase tracking-wide">Новая повторяющаяся задача</p>
+          <div className="border-t border-[#DDEAE4] pt-4 space-y-3">
+            <p className="text-xs font-medium text-[#6B8078] uppercase tracking-wide">Новая повторяющаяся задача</p>
             <input
               type="text" value={newText} onChange={e => setNewText(e.target.value)}
               placeholder="Текст задачи..."
-              className="w-full px-3 py-2 border border-[#e3ebe3] rounded-md text-sm text-[#38513e] placeholder-[#b0c3b2] focus:outline-none focus:border-[#38513e]"
+              className="w-full px-3 py-2 border border-[#DDEAE4] rounded-md text-sm text-[#0B5D46] placeholder-[#9DB8AC] focus:outline-none focus:border-[#0B5D46]"
               onKeyDown={e => e.key === 'Enter' && addRecurring()}
             />
             <div>
-              <p className="text-xs text-[#8a9d8c] mb-1.5">Теги</p>
+              <p className="text-xs text-[#6B8078] mb-1.5">Теги</p>
               <TagInput tags={newTags} onChange={setNewTags} />
             </div>
             {/* Переключатель режима */}
-            <div className="flex bg-[#eef3ee] rounded-lg p-1 gap-1">
+            <div className="flex bg-[#F1F8F4] rounded-lg p-1 gap-1">
               {[{ id: 'week', label: 'По дням недели' }, { id: 'month', label: 'По числам месяца' }].map(m => (
                 <button key={m.id} onClick={() => setNewMode(m.id)}
-                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${newMode === m.id ? 'bg-[#38513e] text-white' : 'text-[#8a9d8c] hover:text-[#38513e]'}`}>
+                  className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${newMode === m.id ? 'bg-[#0B5D46] text-white' : 'text-[#6B8078] hover:text-[#0B5D46]'}`}>
                   {m.label}
                 </button>
               ))}
             </div>
             {newMode === 'week' ? (
               <div>
-                <p className="text-xs text-[#8a9d8c] mb-1.5">Дни недели</p>
+                <p className="text-xs text-[#6B8078] mb-1.5">Дни недели</p>
                 <div className="flex gap-1.5">
                   {WEEKDAYS.map((d, i) => (
                     <button key={i} onClick={() => {
                       setNewDays(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
                     }}
-                      className={`px-2.5 py-1.5 text-xs font-medium rounded transition-colors ${newDays.includes(i) ? 'bg-[#38513e] text-white' : 'bg-[#eef3ee] text-[#8a9d8c] hover:text-[#38513e]'}`}>
+                      className={`px-2.5 py-1.5 text-xs font-medium rounded transition-colors ${newDays.includes(i) ? 'bg-[#0B5D46] text-white' : 'bg-[#F1F8F4] text-[#6B8078] hover:text-[#0B5D46]'}`}>
                       {d}
                     </button>
                   ))}
@@ -964,7 +964,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               </div>
             ) : (
               <div>
-                <p className="text-xs text-[#8a9d8c] mb-1.5">Числа месяца</p>
+                <p className="text-xs text-[#6B8078] mb-1.5">Числа месяца</p>
                 <div className="grid grid-cols-7 gap-1">
                   {[...Array(31)].map((_, idx) => {
                     const day = idx + 1;
@@ -972,17 +972,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                       <button key={day} onClick={() => {
                         setNewMonthDays(prev => prev.includes(day) ? prev.filter(x => x !== day) : [...prev, day]);
                       }}
-                        className={`py-1.5 text-xs font-medium rounded transition-colors ${newMonthDays.includes(day) ? 'bg-[#38513e] text-white' : 'bg-[#eef3ee] text-[#8a9d8c] hover:text-[#38513e]'}`}>
+                        className={`py-1.5 text-xs font-medium rounded transition-colors ${newMonthDays.includes(day) ? 'bg-[#0B5D46] text-white' : 'bg-[#F1F8F4] text-[#6B8078] hover:text-[#0B5D46]'}`}>
                         {day}
                       </button>
                     );
                   })}
                 </div>
-                <p className="text-[10px] text-[#b0c3b2] mt-1.5">Если выбранного числа нет в месяце (напр. 31 в феврале) — задача появится в последний день месяца.</p>
+                <p className="text-[10px] text-[#9DB8AC] mt-1.5">Если выбранного числа нет в месяце (напр. 31 в феврале) — задача появится в последний день месяца.</p>
               </div>
             )}
             <button onClick={addRecurring} disabled={!canAdd}
-              className="w-full px-4 py-2 bg-[#38513e] text-white text-sm font-medium rounded-md hover:bg-[#2a3d2f] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5">
+              className="w-full px-4 py-2 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5">
               <Plus size={14} /> Добавить
             </button>
           </div>
@@ -1227,11 +1227,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     return (
       <div>
       <div className="flex items-center justify-center gap-2 mb-3">
-        <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+        <button onClick={() => navigate(-1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
           <ChevronLeft size={18} />
         </button>
-        <span className="text-sm font-semibold text-[#38513e] min-w-[150px] text-center">{weekLabel}</span>
-        <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+        <span className="text-sm font-semibold text-[#0B5D46] min-w-[150px] text-center">{weekLabel}</span>
+        <button onClick={() => navigate(1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
           <ChevronRight size={18} />
         </button>
       </div>
@@ -1245,17 +1245,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
           return (
             <div key={i} onClick={() => { setCurrentDate(d); setDayStage('day'); setView('day'); }}
-              className={`bg-white rounded-lg border transition-all cursor-pointer p-2.5 sm:p-3 min-h-[120px] hover:border-[#b0c3b2] ${isToday ? 'border-[#38513e]' : 'border-[#e3ebe3]'}`}>
-              <div className={`text-xs font-semibold mb-2 pb-1.5 border-b border-[#eef3ee] ${isToday ? 'text-[#38513e]' : 'text-[#8a9d8c]'}`}>
+              className={`bg-surface rounded-2xl border transition-all cursor-pointer p-2.5 sm:p-3 min-h-[120px] shadow-soft hover:border-[#12805F] ${isToday ? 'border-[#0B5D46]' : 'border-[#DDEAE4]'}`}>
+              <div className={`text-xs font-semibold mb-2 pb-1.5 border-b border-[#F1F8F4] ${isToday ? 'text-[#0B5D46]' : 'text-[#6B8078]'}`}>
                 {d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })}
               </div>
               <div className="space-y-1">
                 {dayTasks.slice(0, 5).map((t, idx) => (
-                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && dStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
+                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#CDEAD9] text-[#0B5D46] line-through' : (!t.completed && dStr < todayStr ? 'bg-[#FAD3D3] text-[#C0392B]' : 'bg-[#F1F8F4] text-[#0B5D46]')}`}>
                     {t.text}
                   </div>
                 ))}
-                {dayTasks.length > 5 && <div className="text-[10px] text-[#8a9d8c]">+{dayTasks.length - 5}</div>}
+                {dayTasks.length > 5 && <div className="text-[10px] text-[#6B8078]">+{dayTasks.length - 5}</div>}
               </div>
             </div>
           );
@@ -1274,18 +1274,18 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           const wDone = weekTasks.filter(t => t.completed).length;
           const sorted = weekTasks.slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0));
           return (
-            <div className="bg-[#f4f7f4] rounded-lg border border-[#d7e3d7] p-2.5 sm:p-3 min-h-[120px]">
-              <div className="text-xs font-semibold mb-2 pb-1.5 border-b border-[#e3ebe3] text-[#38513e] flex items-center gap-1">
+            <div className="bg-[#F1F8F4] rounded-lg border border-[#DDEAE4] p-2.5 sm:p-3 min-h-[120px]">
+              <div className="text-xs font-semibold mb-2 pb-1.5 border-b border-[#DDEAE4] text-[#0B5D46] flex items-center gap-1">
                 <BarChart3 size={11} /> Итоги недели
               </div>
-              <p className="text-[11px] text-[#5a7a5a] mb-1.5">Выполнено {wDone} из {wTotal}</p>
+              <p className="text-[11px] text-[#4C645B] mb-1.5">Выполнено {wDone} из {wTotal}</p>
               <div className="space-y-1 max-h-[160px] overflow-y-auto">
                 {sorted.map((t, idx) => (
-                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && t.dateStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
+                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#CDEAD9] text-[#0B5D46] line-through' : (!t.completed && t.dateStr < todayStr ? 'bg-[#FAD3D3] text-[#C0392B]' : 'bg-[#F1F8F4] text-[#0B5D46]')}`}>
                     {t.text}
                   </div>
                 ))}
-                {wTotal === 0 && <p className="text-[10px] text-[#a9bcac]">Нет задач</p>}
+                {wTotal === 0 && <p className="text-[10px] text-[#9DB8AC]">Нет задач</p>}
               </div>
             </div>
           );
@@ -1304,17 +1304,17 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           const isToday = satStr === todayS || sunStr === todayS;
           return (
             <div onClick={() => { setCurrentDate(sat); setView('weekend'); }}
-              className={`bg-white rounded-lg border transition-all cursor-pointer p-2.5 sm:p-3 min-h-[120px] hover:border-[#b0c3b2] ${isToday ? 'border-[#38513e]' : 'border-[#e3ebe3]'}`}>
-              <div className={`text-xs font-semibold mb-2 pb-1.5 border-b border-[#eef3ee] ${isToday ? 'text-[#38513e]' : 'text-[#8a9d8c]'}`}>
+              className={`bg-surface rounded-2xl border transition-all cursor-pointer p-2.5 sm:p-3 min-h-[120px] shadow-soft hover:border-[#12805F] ${isToday ? 'border-[#0B5D46]' : 'border-[#DDEAE4]'}`}>
+              <div className={`text-xs font-semibold mb-2 pb-1.5 border-b border-[#F1F8F4] ${isToday ? 'text-[#0B5D46]' : 'text-[#6B8078]'}`}>
                 Сб-Вс · {sat.getDate()}-{sun.getDate()}
               </div>
               <div className="space-y-1">
                 {wkTasks.slice(0, 5).map((t, idx) => (
-                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && t.dateStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
+                  <div key={idx} className={`text-[10px] truncate rounded px-1 py-0.5 ${t.completed ? 'bg-[#CDEAD9] text-[#0B5D46] line-through' : (!t.completed && t.dateStr < todayStr ? 'bg-[#FAD3D3] text-[#C0392B]' : 'bg-[#F1F8F4] text-[#0B5D46]')}`}>
                     {t.text}
                   </div>
                 ))}
-                {wkTasks.length > 5 && <div className="text-[10px] text-[#8a9d8c]">+{wkTasks.length - 5}</div>}
+                {wkTasks.length > 5 && <div className="text-[10px] text-[#6B8078]">+{wkTasks.length - 5}</div>}
               </div>
             </div>
           );
@@ -1339,39 +1339,39 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       const dateLabel = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
       return (
         <div className="flex-1 min-w-0">
-          <div className="px-4 sm:px-6 py-3 border-b border-[#e3ebe3] flex items-baseline gap-2">
-            <span className="text-base font-semibold text-[#38513e] capitalize">{weekday}</span>
-            <span className="text-xs text-[#8a9d8c]">{dateLabel}</span>
+          <div className="px-4 sm:px-6 py-3 border-b border-[#DDEAE4] flex items-baseline gap-2">
+            <span className="text-base font-semibold text-[#0B5D46] capitalize">{weekday}</span>
+            <span className="text-xs text-[#6B8078]">{dateLabel}</span>
           </div>
           <div className="p-2 sm:p-3">
             <div className="space-y-0.5">
               {dayTasks.map(task => {
                 const isOverdue = !task.completed && dStr < todayStr;
-                const rowBg = task.completed ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]' : isOverdue ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]' : 'hover:bg-[#f4f7f4]';
+                const rowBg = task.completed ? 'bg-[#DDF3E7] hover:bg-[#CDEAD9]' : isOverdue ? 'bg-[#FDECEC] hover:bg-[#F8DDD7]' : 'hover:bg-[#F1F8F4]';
                 return (
                   <div key={task.id} className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors ${rowBg}`}>
                     <input type="checkbox" checked={task.completed}
                       onChange={() => updateTask(dStr, task.id, { completed: !task.completed })}
-                      className="w-4 h-4 cursor-pointer accent-[#38513e] shrink-0" />
+                      className="w-4 h-4 cursor-pointer accent-[#0B5D46] shrink-0" />
                     <input type="text" value={task.text}
                       onChange={e => updateTask(dStr, task.id, { text: e.target.value })}
-                      className={`flex-grow bg-transparent text-sm focus:outline-none min-w-0 ${task.completed ? 'line-through text-[#b0c3b2]' : 'text-[#38513e]'}`} />
+                      className={`flex-grow bg-transparent text-sm focus:outline-none min-w-0 ${task.completed ? 'line-through text-[#9DB8AC]' : 'text-[#0B5D46]'}`} />
                     {(task.tags || []).map(tag => (
-                      <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#eef3ee] text-[#8a9d8c] rounded shrink-0 hidden sm:inline">#{tag}</span>
+                      <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#F1F8F4] text-[#6B8078] rounded shrink-0 hidden sm:inline">#{tag}</span>
                     ))}
                     <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => moveToNextDay(task, dStr)}
                         title="Перенести на следующий день"
-                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors">
+                        className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-white/70 rounded-full transition-colors">
                         <ArrowRight size={13} />
                       </button>
                       <button onClick={() => openInCalendar(task, dStr)}
                         title="В Google Календарь"
-                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors">
+                        className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-white/70 rounded-full transition-colors">
                         <Calendar size={13} />
                       </button>
                       <button onClick={() => deleteTask(dStr, task.id)}
-                        className="p-1.5 text-[#8a9d8c] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                        className="p-1.5 text-[#6B8078] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -1380,9 +1380,9 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
               })}
             </div>
             <form onSubmit={e => { e.preventDefault(); const inp = e.currentTarget.elements.newtask; if (inp.value.trim()) { addTask(dStr, inp.value); inp.value = ''; } }}
-              className="flex items-center gap-2.5 px-3 py-2 mt-0.5 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
-              <Plus size={15} className="text-[#6b8e6b] shrink-0" />
-              <input name="newtask" className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
+              className="flex items-center gap-2.5 px-3 py-2 mt-0.5 rounded-xl bg-[#F1F8F4] focus-within:bg-[#F1F8F4] transition-colors">
+              <Plus size={15} className="text-[#12805F] shrink-0" />
+              <input name="newtask" className="flex-grow bg-transparent text-sm text-[#0B5D46] placeholder-[#9DB8AC] focus:outline-none"
                 placeholder="Добавить задачу..." />
             </form>
           </div>
@@ -1391,22 +1391,22 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     };
 
     return (
-      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-        <div className="px-4 sm:px-8 py-4 flex justify-center sm:justify-end items-center border-b border-[#e3ebe3]">
+      <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+        <div className="px-4 sm:px-8 py-4 flex justify-center sm:justify-end items-center border-b border-[#DDEAE4]">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <button onClick={() => navigate(-1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
               <ChevronLeft size={18} />
             </button>
             <div className="text-center min-w-[130px]">
-              <p className="text-base font-semibold text-[#38513e]">Выходные</p>
-              <p className="text-xs text-[#8a9d8c]">{weekendLabel}</p>
+              <p className="text-base font-semibold text-[#0B5D46]">Выходные</p>
+              <p className="text-xs text-[#6B8078]">{weekendLabel}</p>
             </div>
-            <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+            <button onClick={() => navigate(1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
               <ChevronRight size={18} />
             </button>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-[#e3ebe3]">
+        <div className="flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-[#DDEAE4]">
           {renderDaySection(sat)}
           {renderDaySection(sun)}
         </div>
@@ -1434,11 +1434,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
     return (
       <div>
-        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 bg-[#38513e] flex items-center justify-between gap-3">
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 bg-[#0B5D46] flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2"><BarChart3 size={16} /> Итоги недели</h2>
-              <p className="text-xs text-[#b8c9ba] mt-0.5">Все задачи недели — выполненные и невыполненные</p>
+              <p className="text-xs text-[#BFE5D6] mt-0.5">Все задачи недели — выполненные и невыполненные</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button onClick={() => navigate(-1)} className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
@@ -1451,40 +1451,40 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             </div>
           </div>
           {/* Статистика */}
-          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3]">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#DDEAE4]">
             <div className="grid grid-cols-3 gap-3 mb-3">
               {[
-                { label: 'Всего', value: total, color: '#38513e' },
-                { label: 'Выполнено', value: done, color: '#4a6b4a' },
-                { label: 'Осталось', value: notDone, color: '#9a3d3d' },
+                { label: 'Всего', value: total, color: '#0B5D46' },
+                { label: 'Выполнено', value: done, color: '#12805F' },
+                { label: 'Осталось', value: notDone, color: '#C0392B' },
               ].map(kpi => (
                 <div key={kpi.label} className="text-center">
                   <p className="text-2xl font-semibold" style={{ color: kpi.color }}>{kpi.value}</p>
-                  <p className="text-xs text-[#8a9d8c]">{kpi.label}</p>
+                  <p className="text-xs text-[#6B8078]">{kpi.label}</p>
                 </div>
               ))}
             </div>
-            <div className="h-2.5 bg-[#eef3ee] rounded-full overflow-hidden">
-              <div className="h-full bg-[#4a6b4a] rounded-full transition-all" style={{ width: `${percent}%` }} />
+            <div className="h-2.5 bg-[#F1F8F4] rounded-full overflow-hidden">
+              <div className="h-full bg-[#12805F] rounded-full transition-all" style={{ width: `${percent}%` }} />
             </div>
-            <p className="text-xs text-[#8a9d8c] mt-1.5 text-center">Выполнено {percent}%</p>
+            <p className="text-xs text-[#6B8078] mt-1.5 text-center">Выполнено {percent}%</p>
           </div>
           {/* Список задач */}
           <div className="p-3 sm:p-5">
             {total === 0 ? (
-              <p className="text-sm text-[#a9bcac] px-2 py-6 text-center">За неделю задач не было</p>
+              <p className="text-sm text-[#9DB8AC] px-2 py-6 text-center">За неделю задач не было</p>
             ) : (
               <div className="space-y-1">
                 {sorted.map(t => {
                   const isOverdue = !t.completed && t.dateStr < todayStr;
-                  const rowBg = t.completed ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]' : isOverdue ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]' : 'hover:bg-[#f4f7f4]';
+                  const rowBg = t.completed ? 'bg-[#DDF3E7] hover:bg-[#CDEAD9]' : isOverdue ? 'bg-[#FDECEC] hover:bg-[#F8DDD7]' : 'hover:bg-[#F1F8F4]';
                   return (
                     <div key={t.id + t.dateStr} className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${rowBg}`}>
                       <input type="checkbox" checked={t.completed}
                         onChange={() => updateTask(t.dateStr, t.id, { completed: !t.completed })}
-                        className="w-4 h-4 cursor-pointer accent-[#38513e] shrink-0" />
-                      <span className={`text-sm flex-grow min-w-0 truncate ${t.completed ? 'line-through text-[#b0c3b2]' : 'text-[#38513e]'}`}>{t.text}</span>
-                      <span className="text-xs text-[#8a9d8c] shrink-0 capitalize">{fmt(t.dateStr)}</span>
+                        className="w-4 h-4 cursor-pointer accent-[#0B5D46] shrink-0" />
+                      <span className={`text-sm flex-grow min-w-0 truncate ${t.completed ? 'line-through text-[#9DB8AC]' : 'text-[#0B5D46]'}`}>{t.text}</span>
+                      <span className="text-xs text-[#6B8078] shrink-0 capitalize">{fmt(t.dateStr)}</span>
                     </div>
                   );
                 })}
@@ -1505,19 +1505,19 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     const monthLabel = currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
 
     return (
-      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-        <div className="flex items-center justify-center gap-2 py-3 border-b border-[#e3ebe3]">
-          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+      <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+        <div className="flex items-center justify-center gap-2 py-3 border-b border-[#DDEAE4]">
+          <button onClick={() => navigate(-1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
             <ChevronLeft size={18} />
           </button>
-          <span className="text-sm font-semibold text-[#38513e] capitalize min-w-[150px] text-center">{monthLabel}</span>
-          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+          <span className="text-sm font-semibold text-[#0B5D46] capitalize min-w-[150px] text-center">{monthLabel}</span>
+          <button onClick={() => navigate(1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
             <ChevronRight size={18} />
           </button>
         </div>
-        <div className="grid grid-cols-7 border-b border-[#e3ebe3]">
+        <div className="grid grid-cols-7 border-b border-[#DDEAE4]">
           {WEEKDAYS.map(d => (
-            <div key={d} className="py-2 text-center text-[10px] font-semibold text-[#8a9d8c] uppercase tracking-wider">{d}</div>
+            <div key={d} className="py-2 text-center text-[10px] font-semibold text-[#6B8078] uppercase tracking-wider">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -1531,20 +1531,20 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
             return (
               <div key={i} onClick={() => isValidDay && (setCurrentDate(dayDate), setDayStage('day'), setView('day'))}
-                className={`h-14 sm:h-24 md:h-28 border-b border-r border-[#eef3ee] p-1 sm:p-1.5 transition-colors ${isValidDay ? 'cursor-pointer hover:bg-[#f4f7f4]' : 'bg-[#f4f7f4]'}`}>
+                className={`h-14 sm:h-24 md:h-28 border-b border-r border-[#F1F8F4] p-1 sm:p-1.5 transition-colors ${isValidDay ? 'cursor-pointer hover:bg-[#F1F8F4]' : 'bg-[#F1F8F4]'}`}>
                 {isValidDay && (
                   <>
-                    <span className={`inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-semibold ${isToday ? 'bg-[#38513e] text-white' : 'text-[#38513e]'}`}>
+                    <span className={`inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-semibold ${isToday ? 'bg-[#0B5D46] text-white' : 'text-[#0B5D46]'}`}>
                       {dayNum}
                     </span>
                     <div className="mt-0.5 space-y-0.5">
                       {dayTasks.slice(0, 2).map((t, idx) => (
-                        <div key={idx} className={`hidden sm:block text-[9px] px-1 rounded truncate ${t.completed ? 'bg-[#cfe8cf] text-[#38513e] line-through' : (!t.completed && dStr < todayStr ? 'bg-[#fbdcdc] text-[#9a3d3d]' : 'bg-[#eef3ee] text-[#38513e]')}`}>
+                        <div key={idx} className={`hidden sm:block text-[9px] px-1 rounded truncate ${t.completed ? 'bg-[#CDEAD9] text-[#0B5D46] line-through' : (!t.completed && dStr < todayStr ? 'bg-[#FAD3D3] text-[#C0392B]' : 'bg-[#F1F8F4] text-[#0B5D46]')}`}>
                           {t.text}
                         </div>
                       ))}
-                      {dayTasks.length > 2 && <div className="hidden sm:block text-[9px] text-[#8a9d8c] px-1">+{dayTasks.length - 2}</div>}
-                      {dayTasks.length > 0 && <div className="sm:hidden w-1.5 h-1.5 rounded-full bg-[#38513e] mx-auto mt-1" />}
+                      {dayTasks.length > 2 && <div className="hidden sm:block text-[9px] text-[#6B8078] px-1">+{dayTasks.length - 2}</div>}
+                      {dayTasks.length > 0 && <div className="sm:hidden w-1.5 h-1.5 rounded-full bg-[#0B5D46] mx-auto mt-1" />}
                     </div>
                   </>
                 )}
@@ -1575,45 +1575,45 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     };
 
     return (
-      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-        <div className="px-5 sm:px-8 py-5 bg-[#38513e]">
+      <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+        <div className="px-5 sm:px-8 py-5 bg-[#0B5D46]">
           <h2 className="text-base font-semibold text-white">Важные задачи</h2>
-          <p className="text-xs text-[#b8c9ba] mt-0.5">Задачи без привязки к дате — цели, планы, важные дела</p>
+          <p className="text-xs text-[#BFE5D6] mt-0.5">Задачи без привязки к дате — цели, планы, важные дела</p>
         </div>
 
-        <div className="divide-y divide-[#eef3ee] p-2 sm:p-3">
+        <div className="divide-y divide-[#F1F8F4] p-2 sm:p-3">
           {importantTasks.slice().sort((a, b) => (a.completed ? 1 : 0) - (b.completed ? 1 : 0)).map((task) => {
             const impOverdue = !task.completed && task.deadline && task.deadline < todayStr;
             const impBg = task.completed
-              ? 'bg-[#dcefdc] hover:bg-[#cfe8cf]'
+              ? 'bg-[#DDF3E7] hover:bg-[#CDEAD9]'
               : impOverdue
-                ? 'bg-[#fbe0e0] hover:bg-[#f6d2d2]'
-                : 'hover:bg-[#f4f7f4]';
+                ? 'bg-[#FDECEC] hover:bg-[#F8DDD7]'
+                : 'hover:bg-[#F1F8F4]';
             return (
             <div key={task.id} className="group">
               {/* Основная строка */}
               <div className={`flex items-start gap-3 px-3 sm:px-5 py-3 rounded-2xl ${impBg} transition-colors`}>
                 <input type="checkbox" checked={task.completed}
                   onChange={() => updateImportant(task.id, { completed: !task.completed })}
-                  className="mt-0.5 w-4 h-4 cursor-pointer accent-[#4a6b4a] shrink-0" />
+                  className="mt-0.5 w-4 h-4 cursor-pointer accent-[#12805F] shrink-0" />
                 <div className="flex-grow min-w-0">
                   {/* Текст задачи */}
                   <input
                     type="text"
                     value={task.text}
                     onChange={e => updateImportant(task.id, { text: e.target.value })}
-                    className={`w-full bg-transparent text-sm text-[#2f3d31] focus:outline-none ${task.completed ? 'line-through text-[#a9bcac]' : ''}`}
+                    className={`w-full bg-transparent text-sm text-[#14261F] focus:outline-none ${task.completed ? 'line-through text-[#9DB8AC]' : ''}`}
                   />
                   {/* Дедлайн + ссылка + теги */}
                   <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                    <div className="flex items-center gap-1 bg-[#eef3ee] rounded-full px-2.5 py-1">
-                      <Calendar size={11} className="text-[#6b8e6b]" />
+                    <div className="flex items-center gap-1 bg-[#F1F8F4] rounded-full px-2.5 py-1">
+                      <Calendar size={11} className="text-[#12805F]" />
                       <input
                         type="date"
                         value={task.deadline || ''}
                         onChange={e => updateImportant(task.id, { deadline: e.target.value })}
                         onClick={e => { try { e.target.showPicker(); } catch (err) {} }}
-                        className="text-xs text-[#5a7a5a] bg-transparent focus:outline-none cursor-pointer"
+                        className="text-xs text-[#4C645B] bg-transparent focus:outline-none cursor-pointer"
                       />
                     </div>
                     <input
@@ -1621,12 +1621,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                       value={task.link || ''}
                       onChange={e => updateImportant(task.id, { link: e.target.value })}
                       placeholder="Ссылка на задачу..."
-                      className="text-xs text-[#5a7a5a] placeholder-[#b0c3b2] bg-transparent focus:outline-none min-w-[140px] flex-1"
+                      className="text-xs text-[#4C645B] placeholder-[#9DB8AC] bg-transparent focus:outline-none min-w-[140px] flex-1"
                     />
                     {task.link && (
                       <a href={task.link} target="_blank" rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}
-                        className="text-xs font-medium text-[#4a6b4a] hover:text-[#38513e] shrink-0">
+                        className="text-xs font-medium text-[#12805F] hover:text-[#0B5D46] shrink-0">
                         открыть →
                       </a>
                     )}
@@ -1635,7 +1635,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                   {(task.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {task.tags.map(tag => (
-                        <span key={tag} className="text-[10px] px-2 py-0.5 bg-[#e3ebe3] text-[#5a7a5a] rounded-full">#{tag}</span>
+                        <span key={tag} className="text-[10px] px-2 py-0.5 bg-[#DDEAE4] text-[#4C645B] rounded-full">#{tag}</span>
                       ))}
                     </div>
                   )}
@@ -1646,13 +1646,13 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                       onChange={e => updateImportant(task.id, { notes: e.target.value })}
                       placeholder="Заметка..."
                       rows={task.notes ? undefined : 1}
-                      className="w-full mt-1.5 bg-transparent text-xs text-[#6b8e6b] placeholder-[#b0c3b2] focus:outline-none resize-none leading-relaxed"
+                      className="w-full mt-1.5 bg-transparent text-xs text-[#12805F] placeholder-[#9DB8AC] focus:outline-none resize-none leading-relaxed"
                     />
                   )}
                 </div>
                 <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0 mt-0.5">
                   <button onClick={() => deleteImportant(task.id)}
-                    className="p-1.5 text-[#9bb09d] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                    className="p-1.5 text-[#9DB8AC] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -1663,10 +1663,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         {/* Строка добавления */}
-        <div className="flex items-center gap-3 mx-2 sm:mx-3 mb-2 sm:mb-3 px-3 sm:px-5 py-3 rounded-2xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
-          <Plus size={16} className="text-[#6b8e6b] shrink-0" />
+        <div className="flex items-center gap-3 mx-2 sm:mx-3 mb-2 sm:mb-3 px-3 sm:px-5 py-3 rounded-2xl bg-[#F1F8F4] focus-within:bg-[#F1F8F4] transition-colors">
+          <Plus size={16} className="text-[#12805F] shrink-0" />
           <input
-            className="flex-grow bg-transparent text-sm text-[#2f3d31] placeholder-[#a9bcac] focus:outline-none"
+            className="flex-grow bg-transparent text-sm text-[#14261F] placeholder-[#9DB8AC] focus:outline-none"
             placeholder="Добавить важную задачу..."
             onKeyDown={e => { if (e.key === 'Enter') { addImportant(e.target.value); e.target.value = ''; } }}
           />
@@ -1696,7 +1696,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Создать заметку */}
           <button onClick={createNote}
-            className="flex flex-col items-center justify-center gap-2 min-h-[150px] rounded-2xl border-2 border-dashed border-[#d7e3d7] text-[#6b8e6b] hover:border-[#6b8e6b] hover:bg-[#f4f7f4] transition-colors">
+            className="flex flex-col items-center justify-center gap-2 min-h-[150px] rounded-2xl border-2 border-dashed border-[#DDEAE4] text-[#12805F] hover:border-[#12805F] hover:bg-[#F1F8F4] transition-colors">
             <Plus size={24} />
             <span className="text-sm font-medium">Новая заметка</span>
           </button>
@@ -1704,12 +1704,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
             const preview = stripHtml(n.content);
             return (
               <div key={n.id} onClick={() => setOpenNoteId(n.id)}
-                className="group relative flex flex-col min-h-[150px] rounded-2xl border border-[#e3ebe3] bg-white p-4 cursor-pointer hover:border-[#6b8e6b] hover:shadow-[0_4px_20px_rgba(56,81,62,0.08)] transition-all overflow-hidden">
-                <h3 className="text-sm font-semibold text-[#38513e] mb-1.5 line-clamp-2 pr-5">{n.title || 'Без названия'}</h3>
-                <p className="text-xs text-[#8a9d8c] flex-grow overflow-hidden line-clamp-5 leading-relaxed">{preview || 'Пустая заметка'}</p>
-                <span className="text-[10px] text-[#b0c3b2] mt-2 flex items-center gap-1"><FileText size={10} /> {fmt(n.updatedAt)}</span>
+                className="group relative flex flex-col min-h-[150px] rounded-2xl border border-[#DDEAE4] bg-white p-4 cursor-pointer hover:border-[#12805F] hover:shadow-[0_4px_20px_rgba(16,71,54,0.08)] transition-all overflow-hidden">
+                <h3 className="text-sm font-semibold text-[#0B5D46] mb-1.5 line-clamp-2 pr-5">{n.title || 'Без названия'}</h3>
+                <p className="text-xs text-[#6B8078] flex-grow overflow-hidden line-clamp-5 leading-relaxed">{preview || 'Пустая заметка'}</p>
+                <span className="text-[10px] text-[#9DB8AC] mt-2 flex items-center gap-1"><FileText size={10} /> {fmt(n.updatedAt)}</span>
                 <button onClick={e => { e.stopPropagation(); deleteNote(n.id); }}
-                  className="absolute top-2 right-2 p-1 text-[#c7d3c7] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                  className="absolute top-2 right-2 p-1 text-[#9DB8AC] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -1717,7 +1717,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           })}
         </div>
         {notes.length === 0 && (
-          <p className="text-sm text-[#a9bcac] text-center mt-6">Пока нет заметок. Создайте первую!</p>
+          <p className="text-sm text-[#9DB8AC] text-center mt-6">Пока нет заметок. Создайте первую!</p>
         )}
       </div>
     );
@@ -1735,36 +1735,36 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     const fmtDate = (dStr) => new Date(dStr + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 
     return (
-      <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-        <div className="px-5 sm:px-8 py-5 bg-[#9a3d3d]">
+      <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+        <div className="px-5 sm:px-8 py-5 bg-[#C0392B]">
           <h2 className="text-base font-semibold text-white">Просроченные задачи</h2>
           <p className="text-xs text-[#e8c4c4] mt-0.5">Невыполненные задачи за последние 30 дней · {overdueTasks.length}</p>
         </div>
         <div className="p-3 sm:p-5">
           {overdueTasks.length === 0 ? (
-            <p className="text-sm text-[#a9bcac] px-2 py-6 text-center">Просроченных задач нет 🎉</p>
+            <p className="text-sm text-[#9DB8AC] px-2 py-6 text-center">Просроченных задач нет 🎉</p>
           ) : (
             <div className="space-y-1">
               {overdueTasks.map(t => (
-                <div key={t.id + t.dateStr} className="group flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#fbe0e0] hover:bg-[#f6d2d2] transition-colors">
-                  <span className="text-xs text-[#9a3d3d] font-medium w-14 shrink-0">{fmtDate(t.dateStr)}</span>
-                  <span className="text-sm text-[#38513e] flex-grow min-w-0 truncate">{t.text}</span>
+                <div key={t.id + t.dateStr} className="group flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#FDECEC] hover:bg-[#F8DDD7] transition-colors">
+                  <span className="text-xs text-[#C0392B] font-medium w-14 shrink-0">{fmtDate(t.dateStr)}</span>
+                  <span className="text-sm text-[#0B5D46] flex-grow min-w-0 truncate">{t.text}</span>
                   {(t.tags || []).slice(0, 2).map(tag => (
-                    <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/60 text-[#8a9d8c] rounded shrink-0 hidden sm:inline">#{tag}</span>
+                    <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/60 text-[#6B8078] rounded shrink-0 hidden sm:inline">#{tag}</span>
                   ))}
                   <div className="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button onClick={() => updateTask(t.dateStr, t.id, { completed: true })}
                       title="Закрыть задачу"
-                      className="p-1.5 text-[#8a9d8c] hover:text-[#4a6b4a] hover:bg-white/70 rounded-full transition-colors">
+                      className="p-1.5 text-[#6B8078] hover:text-[#12805F] hover:bg-white/70 rounded-full transition-colors">
                       <Check size={14} />
                     </button>
                     <button onClick={() => moveTaskToImportant(t.dateStr, t)}
                       title="Перенести в «Важные задачи»"
-                      className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors">
+                      className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-white/70 rounded-full transition-colors">
                       <ArrowRight size={14} />
                     </button>
                     <label title="Перенести на дату"
-                      className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-white/70 rounded-full transition-colors cursor-pointer relative">
+                      className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-white/70 rounded-full transition-colors cursor-pointer relative">
                       <Calendar size={14} />
                       <input type="date"
                         onChange={e => moveTaskToDate(t.dateStr, t, e.target.value)}
@@ -1824,11 +1824,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       <div className="space-y-4">
         {/* Навигация по месяцам */}
         <div className="flex items-center justify-center gap-2">
-          <button onClick={() => navigate(-1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+          <button onClick={() => navigate(-1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
             <ChevronLeft size={18} />
           </button>
-          <span className="text-base font-semibold text-[#38513e] capitalize min-w-[160px] text-center">{monthName}</span>
-          <button onClick={() => navigate(1)} className="p-1 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+          <span className="text-base font-semibold text-[#0B5D46] capitalize min-w-[160px] text-center">{monthName}</span>
+          <button onClick={() => navigate(1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
             <ChevronRight size={18} />
           </button>
         </div>
@@ -1836,51 +1836,51 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         {/* KPI-плитки */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Всего задач', value: total, color: '#38513e' },
-            { label: 'Выполнено', value: completed, color: '#4a6b4a' },
-            { label: 'Не выполнено', value: notCompleted, color: '#a9705a' },
-            { label: 'Прогресс', value: `${percent}%`, color: '#6b8e6b' },
+            { label: 'Всего задач', value: total, color: '#0B5D46' },
+            { label: 'Выполнено', value: completed, color: '#12805F' },
+            { label: 'Не выполнено', value: notCompleted, color: '#C0392B' },
+            { label: 'Прогресс', value: `${percent}%`, color: '#12805F' },
           ].map(kpi => (
-            <div key={kpi.label} className="bg-white rounded-2xl border border-[#e3ebe3] shadow-[0_2px_12px_rgba(56,81,62,0.05)] p-4 text-center">
+            <div key={kpi.label} className="bg-white rounded-2xl border border-[#DDEAE4] shadow-[0_2px_12px_rgba(16,71,54,0.05)] p-4 text-center">
               <p className="text-2xl font-semibold" style={{ color: kpi.color }}>{kpi.value}</p>
-              <p className="text-xs text-[#8a9d8c] mt-0.5">{kpi.label}</p>
+              <p className="text-xs text-[#6B8078] mt-0.5">{kpi.label}</p>
             </div>
           ))}
         </div>
 
         {/* Диаграммы */}
-        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 bg-[#38513e]">
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 bg-[#0B5D46]">
             <h2 className="text-base font-semibold text-white flex items-center gap-2"><BarChart3 size={16} /> Итоги месяца</h2>
           </div>
           <div className="p-5 sm:p-8 flex flex-col md:flex-row gap-8 items-center">
             {/* Donut */}
             <div className="relative shrink-0">
               <svg viewBox="0 0 140 140" className="w-40 h-40">
-                <circle cx="70" cy="70" r={R} fill="none" stroke="#eef3ee" strokeWidth="16" />
-                <circle cx="70" cy="70" r={R} fill="none" stroke="#4a6b4a" strokeWidth="16" strokeLinecap="round"
+                <circle cx="70" cy="70" r={R} fill="none" stroke="#F1F8F4" strokeWidth="16" />
+                <circle cx="70" cy="70" r={R} fill="none" stroke="#12805F" strokeWidth="16" strokeLinecap="round"
                   strokeDasharray={`${doneLen} ${C - doneLen}`} transform="rotate(-90 70 70)" />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-semibold text-[#38513e]">{percent}%</span>
-                <span className="text-xs text-[#8a9d8c]">{completed} из {total}</span>
+                <span className="text-3xl font-semibold text-[#0B5D46]">{percent}%</span>
+                <span className="text-xs text-[#6B8078]">{completed} из {total}</span>
               </div>
             </div>
             {/* Бары по тегам */}
             <div className="flex-grow w-full min-w-0">
-              <p className="text-xs font-medium text-[#8a9d8c] mb-3 uppercase tracking-wider">По хэштегам</p>
+              <p className="text-xs font-medium text-[#6B8078] mb-3 uppercase tracking-wider">По хэштегам</p>
               {tagStats.length === 0 ? (
-                <p className="text-sm text-[#a9bcac]">Нет задач с тегами в этом месяце</p>
+                <p className="text-sm text-[#9DB8AC]">Нет задач с тегами в этом месяце</p>
               ) : (
                 <div className="space-y-2.5">
                   {tagStats.map(s => (
                     <div key={s.tag}>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-[#38513e]">#{s.tag}</span>
-                        <span className="text-[#8a9d8c]">{s.done}/{s.total}</span>
+                        <span className="text-[#0B5D46]">#{s.tag}</span>
+                        <span className="text-[#6B8078]">{s.done}/{s.total}</span>
                       </div>
-                      <div className="h-2.5 bg-[#eef3ee] rounded-full overflow-hidden">
-                        <div className="h-full bg-[#4a6b4a] rounded-full transition-all" style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
+                      <div className="h-2.5 bg-[#F1F8F4] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#12805F] rounded-full transition-all" style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
                       </div>
                     </div>
                   ))}
@@ -1891,21 +1891,21 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         {/* Важное за месяц */}
-        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3] flex items-center justify-between">
-            <h2 className="text-base font-semibold text-[#38513e] flex items-center gap-2"><Check size={16} className="text-[#4a6b4a]" /> Важное за месяц</h2>
-            <span className="text-sm text-[#8a9d8c]">{importantDone.length}</span>
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#DDEAE4] flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[#0B5D46] flex items-center gap-2"><Check size={16} className="text-[#12805F]" /> Важное за месяц</h2>
+            <span className="text-sm text-[#6B8078]">{importantDone.length}</span>
           </div>
           <div className="p-3 sm:p-5">
             {importantDone.length === 0 ? (
-              <p className="text-sm text-[#a9bcac] px-2 py-3">В этом месяце нет выполненных важных задач</p>
+              <p className="text-sm text-[#9DB8AC] px-2 py-3">В этом месяце нет выполненных важных задач</p>
             ) : (
               <div className="space-y-1">
                 {importantDone.map(t => (
-                  <div key={t.id} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
-                    <Check size={14} className="text-[#4a6b4a] shrink-0" />
-                    <span className="text-sm text-[#38513e] line-through decoration-[#a9bcac]">{t.text}</span>
-                    <span className="text-xs text-[#8a9d8c] ml-auto shrink-0">{fmtDate(t.deadline)}</span>
+                  <div key={t.id} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#F1F8F4]">
+                    <Check size={14} className="text-[#12805F] shrink-0" />
+                    <span className="text-sm text-[#0B5D46] line-through decoration-[#9DB8AC]">{t.text}</span>
+                    <span className="text-xs text-[#6B8078] ml-auto shrink-0">{fmtDate(t.deadline)}</span>
                   </div>
                 ))}
               </div>
@@ -1914,33 +1914,33 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         {/* Незавершённые задачи */}
-        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3] flex items-center justify-between">
-            <h2 className="text-base font-semibold text-[#38513e]">Незавершённые задачи</h2>
-            <span className="text-sm text-[#8a9d8c]">{unfinished.length}</span>
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#DDEAE4] flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[#0B5D46]">Незавершённые задачи</h2>
+            <span className="text-sm text-[#6B8078]">{unfinished.length}</span>
           </div>
           <div className="p-3 sm:p-5">
             {unfinished.length === 0 ? (
-              <p className="text-sm text-[#a9bcac] px-2 py-3">Все задачи месяца выполнены 🎉</p>
+              <p className="text-sm text-[#9DB8AC] px-2 py-3">Все задачи месяца выполнены 🎉</p>
             ) : (
               <div className="space-y-1">
                 {unfinished.map(t => (
-                  <div key={t.id + t.dateStr} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
-                    <span className="text-xs text-[#8a9d8c] w-14 shrink-0">{fmtDate(t.dateStr)}</span>
-                    <span className="text-sm text-[#38513e] flex-grow min-w-0 truncate">{t.text}</span>
+                  <div key={t.id + t.dateStr} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#F1F8F4]">
+                    <span className="text-xs text-[#6B8078] w-14 shrink-0">{fmtDate(t.dateStr)}</span>
+                    <span className="text-sm text-[#0B5D46] flex-grow min-w-0 truncate">{t.text}</span>
                     <div className="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => updateTask(t.dateStr, t.id, { completed: true })}
                         title="Закрыть задачу"
-                        className="p-1.5 text-[#8a9d8c] hover:text-[#4a6b4a] hover:bg-[#eef3ee] rounded-full transition-colors">
+                        className="p-1.5 text-[#6B8078] hover:text-[#12805F] hover:bg-[#F1F8F4] rounded-full transition-colors">
                         <Check size={14} />
                       </button>
                       <button onClick={() => moveTaskToImportant(t.dateStr, t)}
                         title="Перенести в «Важные задачи»"
-                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors">
+                        className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
                         <ArrowRight size={14} />
                       </button>
                       <label title="Перенести на дату следующего месяца"
-                        className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors cursor-pointer relative">
+                        className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors cursor-pointer relative">
                         <Calendar size={14} />
                         <input type="date" min={nextMonthMin}
                           onChange={e => moveTaskToDate(t.dateStr, t, e.target.value)}
@@ -1955,44 +1955,44 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         {/* Цели на следующий месяц */}
-        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3]">
-            <h2 className="text-base font-semibold text-[#38513e] flex items-center gap-2"><Target size={16} className="text-[#4a6b4a]" /> Цели на следующий месяц</h2>
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#DDEAE4]">
+            <h2 className="text-base font-semibold text-[#0B5D46] flex items-center gap-2"><Target size={16} className="text-[#12805F]" /> Цели на следующий месяц</h2>
           </div>
           <div className="p-3 sm:p-5">
             <div className="space-y-1">
               {monthlyReview.goals.map(g => (
-                <div key={g.id} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
+                <div key={g.id} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#F1F8F4]">
                   <input type="checkbox" checked={g.done}
                     onChange={() => saveReview({ ...monthlyReview, goals: monthlyReview.goals.map(x => x.id === g.id ? { ...x, done: !x.done } : x) })}
-                    className="w-4 h-4 cursor-pointer accent-[#4a6b4a] shrink-0" />
+                    className="w-4 h-4 cursor-pointer accent-[#12805F] shrink-0" />
                   <input value={g.text}
                     onChange={e => saveReview({ ...monthlyReview, goals: monthlyReview.goals.map(x => x.id === g.id ? { ...x, text: e.target.value } : x) })}
-                    className={`flex-grow bg-transparent text-sm focus:outline-none ${g.done ? 'line-through text-[#a9bcac]' : 'text-[#38513e]'}`} />
+                    className={`flex-grow bg-transparent text-sm focus:outline-none ${g.done ? 'line-through text-[#9DB8AC]' : 'text-[#0B5D46]'}`} />
                   <div className="flex items-center gap-1 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button onClick={() => addTextToImportant(g.text)}
                       title="Создать «Важную задачу»"
-                      className="px-2 py-1 text-[10px] text-[#4a6b4a] hover:bg-[#eef3ee] rounded-full transition-colors">
+                      className="px-2 py-1 text-[10px] text-[#12805F] hover:bg-[#F1F8F4] rounded-full transition-colors">
                       → в важные
                     </button>
                     <label title="Создать задачу на дату следующего месяца"
-                      className="p-1.5 text-[#8a9d8c] hover:text-[#38513e] hover:bg-[#eef3ee] rounded-full transition-colors cursor-pointer relative">
+                      className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors cursor-pointer relative">
                       <Calendar size={13} />
                       <input type="date" min={nextMonthMin}
                         onChange={e => addTextToDate(g.text, e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer" />
                     </label>
                     <button onClick={() => saveReview({ ...monthlyReview, goals: monthlyReview.goals.filter(x => x.id !== g.id) })}
-                      className="p-1.5 text-[#a9bcac] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                      className="p-1.5 text-[#9DB8AC] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                       <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
-              <Plus size={15} className="text-[#6b8e6b] shrink-0" />
-              <input className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
+            <div className="flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-[#F1F8F4] focus-within:bg-[#F1F8F4] transition-colors">
+              <Plus size={15} className="text-[#12805F] shrink-0" />
+              <input className="flex-grow bg-transparent text-sm text-[#0B5D46] placeholder-[#9DB8AC] focus:outline-none"
                 placeholder="Добавить цель..."
                 onKeyDown={e => {
                   if (e.key === 'Enter' && e.target.value.trim()) {
@@ -2005,28 +2005,28 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         </div>
 
         {/* Идеи на следующий месяц */}
-        <div className="bg-white rounded-3xl border border-[#e3ebe3] shadow-[0_4px_24px_rgba(56,81,62,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 border-b border-[#e3ebe3]">
-            <h2 className="text-base font-semibold text-[#38513e] flex items-center gap-2"><Lightbulb size={16} className="text-[#4a6b4a]" /> Идеи на следующий месяц</h2>
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#DDEAE4]">
+            <h2 className="text-base font-semibold text-[#0B5D46] flex items-center gap-2"><Lightbulb size={16} className="text-[#12805F]" /> Идеи на следующий месяц</h2>
           </div>
           <div className="p-3 sm:p-5">
             <div className="space-y-1">
               {monthlyReview.ideas.map(idea => (
-                <div key={idea.id} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#f4f7f4]">
-                  <Lightbulb size={13} className="text-[#b0c3b2] shrink-0" />
+                <div key={idea.id} className="group flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-[#F1F8F4]">
+                  <Lightbulb size={13} className="text-[#9DB8AC] shrink-0" />
                   <input value={idea.text}
                     onChange={e => saveReview({ ...monthlyReview, ideas: monthlyReview.ideas.map(x => x.id === idea.id ? { ...x, text: e.target.value } : x) })}
-                    className="flex-grow bg-transparent text-sm text-[#38513e] focus:outline-none" />
+                    className="flex-grow bg-transparent text-sm text-[#0B5D46] focus:outline-none" />
                   <button onClick={() => saveReview({ ...monthlyReview, ideas: monthlyReview.ideas.filter(x => x.id !== idea.id) })}
-                    className="p-1.5 text-[#a9bcac] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    className="p-1.5 text-[#9DB8AC] hover:text-red-500 hover:bg-red-50 rounded-full transition-colors shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Trash2 size={13} />
                   </button>
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-[#f4f7f4] focus-within:bg-[#eef3ee] transition-colors">
-              <Plus size={15} className="text-[#6b8e6b] shrink-0" />
-              <input className="flex-grow bg-transparent text-sm text-[#38513e] placeholder-[#a9bcac] focus:outline-none"
+            <div className="flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-[#F1F8F4] focus-within:bg-[#F1F8F4] transition-colors">
+              <Plus size={15} className="text-[#12805F] shrink-0" />
+              <input className="flex-grow bg-transparent text-sm text-[#0B5D46] placeholder-[#9DB8AC] focus:outline-none"
                 placeholder="Добавить идею..."
                 onKeyDown={e => {
                   if (e.key === 'Enter' && e.target.value.trim()) {
