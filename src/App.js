@@ -2325,14 +2325,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
         <ChevronLeft size={20} className="text-white" />
       </button>
       <div className="relative">
+        <span className="absolute -top-5 left-0 text-[13px] sm:text-sm font-medium capitalize whitespace-nowrap" style={{ color: '#BFE5D6' }}>{bWeekday}</span>
         <button aria-label="Открыть календарь" aria-expanded={showCalendar} onClick={() => { setCalMonth(new Date(currentDate)); setShowCalendar(v => !v); }}
-          className="border-0 bg-transparent p-0 text-left text-white">
-          <span className="block text-[13px] sm:text-sm font-medium capitalize" style={{ color: '#BFE5D6' }}>{bWeekday}</span>
-          <span className="flex items-center gap-2 sm:gap-3 text-[22px] sm:text-[30px] font-bold leading-tight tracking-[-0.5px]">
-            {bDateLabel}
-            <span className="w-[30px] h-[30px] sm:w-[34px] sm:h-[34px] rounded-[10px] sm:rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.18)' }}>
-              <Calendar size={17} className="text-white" />
-            </span>
+          className="border-0 bg-transparent p-0 text-left text-white flex items-center gap-2 sm:gap-3 text-[22px] sm:text-[30px] font-bold leading-none tracking-[-0.5px]">
+          {bDateLabel}
+          <span className="w-[30px] h-[30px] sm:w-[34px] sm:h-[34px] rounded-[10px] sm:rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.18)' }}>
+            <Calendar size={17} className="text-white" />
           </span>
         </button>
         <CalendarPopover />
