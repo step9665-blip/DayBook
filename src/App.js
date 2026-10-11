@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft, Undo2, Redo2, Clock, Star, Repeat, Search, ChevronsLeft, ChevronsRight, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft, Undo2, Redo2, Clock, Star, Repeat, Search, ChevronsLeft, ChevronsRight, LogOut, Maximize2 } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs, getDoc } from 'firebase/firestore';
@@ -57,14 +57,19 @@ const LoginScreen = () => {
   const handleLogin = () => signInWithPopup(auth, googleProvider).catch(err => console.error('Login error:', err));
 
   return (
-    <div className="min-h-screen bg-[#F1F8F4] flex items-center justify-center">
-      <div className="bg-white rounded-lg border border-[#DDEAE4] p-10 max-w-sm w-full mx-4 text-center">
-        <BookOpen size={36} className="mx-auto text-[#0B5D46] mb-5" />
-        <h1 className="text-2xl font-semibold text-[#0B5D46] mb-1 tracking-tight">DayBook</h1>
-        <p className="text-sm text-[#6B8078] mb-8">Ваш личный ежедневник</p>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #E4F0EA, #F4F9F6)' }}>
+      <div className="bg-surface rounded-[24px] shadow-card p-10 max-w-sm w-full text-center">
+        <div className="flex items-center justify-center gap-2.5 mb-2">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="#0B5D46" aria-hidden="true">
+            <path d="M5 19c0-8 4-14 15-14 0 10-5 15-12 15-1 0-2-.3-3-1z" />
+            <path d="M5 19c2-5 5-8 9-10" stroke="#E4F0EA" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          </svg>
+          <h1 className="text-2xl font-extrabold text-primary tracking-tight">DayBook</h1>
+        </div>
+        <p className="text-sm text-ink-3 mb-8">Ваш личный ежедневник</p>
         <button
           onClick={handleLogin}
-          className="w-full px-5 py-2.5 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors flex items-center justify-center gap-2.5"
+          className="w-full min-h-[48px] px-5 bg-primary text-white text-sm font-bold rounded-[14px] hover:bg-banner1 transition-colors flex items-center justify-center gap-2.5"
         >
           <svg width="16" height="16" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
@@ -329,141 +334,100 @@ const HomeView = ({
   };
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl mx-auto">
+    <div className="min-h-screen flex flex-col items-center px-4 py-10 sm:py-16" style={{ background: 'linear-gradient(135deg, #E4F0EA, #F4F9F6)' }}>
 
-      {editingPlanner && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg border border-[#DDEAE4] p-7 w-full max-w-md mx-4 shadow-lg">
-            <h2 className="text-base font-semibold text-[#0B5D46] mb-5">Редактировать ежедневник</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-[#6B8078] mb-1.5 uppercase tracking-wide">Название</label>
-                <input
-                  type="text" value={editName} onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#DDEAE4] rounded-md text-sm text-[#0B5D46] focus:outline-none focus:border-[#0B5D46]"
-                  autoFocus onKeyDown={e => e.key === 'Enter' && onUpdatePlanner(editingPlanner.id, editName, editColor)}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-[#6B8078] mb-2 uppercase tracking-wide">Цвет</label>
-                <div className="flex gap-2.5">
-                  {PLANNER_COLORS.map(color => (
-                    <button key={color.id} onClick={() => setEditColor(color.id)}
-                      style={{ backgroundColor: color.dot }}
-                      className={`w-7 h-7 rounded-full transition-transform ${editColor === color.id ? 'ring-2 ring-offset-2 ring-[#0B5D46] scale-110' : 'hover:scale-110'}`}
-                    />
-                  ))}
+      {(editingPlanner || showNewPlannerForm) && (() => {
+        const isEdit = !!editingPlanner;
+        const name = isEdit ? editName : newPlannerName;
+        const setName = isEdit ? setEditName : setNewPlannerName;
+        const color = isEdit ? editColor : newPlannerColor;
+        const setColor = isEdit ? setEditColor : setNewPlannerColor;
+        const submit = () => isEdit ? onUpdatePlanner(editingPlanner.id, editName, editColor) : onCreatePlanner();
+        const close = () => isEdit ? setEditingPlanner(null) : (setShowNewPlannerForm(false), setNewPlannerName(''), setNewPlannerColor('blue'));
+        return (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4" onClick={close}>
+            <div className="bg-surface rounded-[22px] border border-line p-6 w-full max-w-md shadow-cal" onClick={e => e.stopPropagation()}>
+              <h2 className="text-lg font-extrabold text-ink mb-5">{isEdit ? 'Редактировать ежедневник' : 'Новый ежедневник'}</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-ink-3 mb-1.5 uppercase tracking-wider">Название</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)}
+                    placeholder="Например: Личный, Работа, Учёба"
+                    className="w-full px-3.5 min-h-[44px] border border-line rounded-[14px] text-sm text-ink placeholder-ink-3 focus:outline-none focus:border-primary bg-surface-soft"
+                    autoFocus onKeyDown={e => e.key === 'Enter' && submit()} />
                 </div>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button onClick={() => onUpdatePlanner(editingPlanner.id, editName, editColor)}
-                  className="flex-1 px-4 py-2 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors flex items-center justify-center gap-1.5">
-                  <Check size={14} /> Сохранить
-                </button>
-                <button onClick={() => setEditingPlanner(null)}
-                  className="flex-1 px-4 py-2 bg-[#F1F8F4] text-[#0B5D46] text-sm font-medium rounded-md hover:bg-[#DDEAE4] transition-colors">
-                  Отмена
-                </button>
+                <div>
+                  <label className="block text-[11px] font-bold text-ink-3 mb-2 uppercase tracking-wider">Цвет</label>
+                  <div className="flex gap-2.5">
+                    {PLANNER_COLORS.map(c => (
+                      <button key={c.id} onClick={() => setColor(c.id)} style={{ backgroundColor: c.dot }}
+                        className={`w-7 h-7 rounded-full transition-transform ${color === c.id ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'}`} />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={submit}
+                    className="flex-1 min-h-[44px] px-4 bg-primary text-white text-sm font-bold rounded-[14px] hover:bg-banner1 transition-colors flex items-center justify-center gap-1.5">
+                    {isEdit ? <Check size={15} /> : <Plus size={15} />} {isEdit ? 'Сохранить' : 'Создать'}
+                  </button>
+                  <button onClick={close}
+                    className="flex-1 min-h-[44px] px-4 bg-surface-soft text-ink text-sm font-semibold rounded-[14px] hover:bg-nav-active transition-colors">
+                    Отмена
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8 pt-2">
-        <div className="flex items-center gap-2.5">
-          <BookOpen size={22} className="text-[#0B5D46]" />
-          <h1 className="text-xl font-semibold text-[#0B5D46] tracking-tight">Мои ежедневники</h1>
-        </div>
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-xs text-[#6B8078] hidden sm:inline">{user.displayName || user.email}</span>
-          <button onClick={onSignOut}
-            className="px-3 py-1.5 text-xs text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-md transition-colors">
-            Выйти
-          </button>
-        </div>
+      {/* Логотип */}
+      <div className="flex items-center gap-2.5 font-extrabold text-2xl text-primary mb-6">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="#0B5D46" aria-hidden="true">
+          <path d="M5 19c0-8 4-14 15-14 0 10-5 15-12 15-1 0-2-.3-3-1z" />
+          <path d="M5 19c2-5 5-8 9-10" stroke="#E4F0EA" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+        DayBook
       </div>
 
-      {showNewPlannerForm ? (
-        <div className="bg-white rounded-lg border border-[#DDEAE4] p-6 mb-6">
-          <h2 className="text-sm font-semibold text-[#0B5D46] mb-4">Новый ежедневник</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-[#6B8078] mb-1.5 uppercase tracking-wide">Название</label>
-              <input type="text" value={newPlannerName} onChange={e => setNewPlannerName(e.target.value)}
-                placeholder="Например: Проект X, Личные задачи..."
-                className="w-full px-3 py-2 border border-[#DDEAE4] rounded-md text-sm text-[#0B5D46] placeholder-[#9DB8AC] focus:outline-none focus:border-[#0B5D46]"
-                autoFocus onKeyDown={e => e.key === 'Enter' && onCreatePlanner()} />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[#6B8078] mb-2 uppercase tracking-wide">Цвет</label>
-              <div className="flex gap-2.5">
-                {PLANNER_COLORS.map(color => (
-                  <button key={color.id} onClick={() => setNewPlannerColor(color.id)}
-                    style={{ backgroundColor: color.dot }}
-                    className={`w-7 h-7 rounded-full transition-transform ${newPlannerColor === color.id ? 'ring-2 ring-offset-2 ring-[#0B5D46] scale-110' : 'hover:scale-110'}`}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button onClick={onCreatePlanner}
-                className="flex-1 px-4 py-2 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors flex items-center justify-center gap-1.5">
-                <Plus size={14} /> Создать
-              </button>
-              <button onClick={() => { setShowNewPlannerForm(false); setNewPlannerName(''); setNewPlannerColor('blue'); }}
-                className="flex-1 px-4 py-2 bg-[#F1F8F4] text-[#0B5D46] text-sm font-medium rounded-md hover:bg-[#DDEAE4] transition-colors">
-                Отмена
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <button onClick={() => setShowNewPlannerForm(true)}
-          className="mb-6 flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-md transition-colors">
-          <Plus size={16} /> Новый ежедневник
-        </button>
-      )}
+      <h1 className="text-3xl sm:text-[40px] font-extrabold text-ink text-center tracking-[-0.5px] mb-3">Какой ежедневник откроем?</h1>
+      <p className="text-ink-3 text-center max-w-2xl mb-9 text-[15px] sm:text-base">Можно вести отдельно: для дома, работы и учёбы. Переключаться между ними легко в любой момент.</p>
 
-      {planners.length === 0 ? (
-        <div className="text-center py-20">
-          <BookOpen size={40} className="mx-auto text-[#DDEAE4] mb-3" />
-          <p className="text-sm text-[#6B8078] mb-4">Ежедневников нет</p>
-          <button onClick={() => setShowNewPlannerForm(true)}
-            className="px-4 py-2 bg-[#0B5D46] text-white text-sm font-medium rounded-md hover:bg-[#0A4D3A] transition-colors inline-flex items-center gap-1.5">
-            <Plus size={14} /> Создать ежедневник
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {planners.map(planner => {
-            const colorInfo = PLANNER_COLORS.find(c => c.id === planner.color);
-            return (
-              <div key={planner.id}
-                className="group bg-white rounded-2xl border border-[#DDEAE4] hover:border-[#12805F] hover:shadow-[0_4px_20px_rgba(16,71,54,0.08)] transition-all cursor-pointer overflow-hidden"
-                onClick={() => onOpenPlanner(planner)}>
-                <div className="h-1 w-full" style={{ backgroundColor: colorInfo?.dot }} />
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-sm font-medium text-[#0B5D46] leading-snug">{planner.name}</h3>
-                    <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ml-2 shrink-0">
-                      <button onClick={e => openEdit(e, planner)}
-                        className="p-1.5 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded transition-colors">
-                        <Pencil size={13} />
-                      </button>
-                      <button onClick={e => { e.stopPropagation(); onDeletePlanner(planner.id); }}
-                        className="p-1.5 text-[#6B8078] hover:text-red-500 hover:bg-red-50 rounded transition-colors">
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-[#6B8078]">{new Date(planner.createdAt).toLocaleDateString('ru-RU')}</p>
+      <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {planners.map(planner => {
+          const colorInfo = PLANNER_COLORS.find(c => c.id === planner.color);
+          const dot = colorInfo?.dot || '#12805F';
+          return (
+            <div key={planner.id} onClick={() => onOpenPlanner(planner)}
+              className="group relative bg-surface rounded-[20px] border-2 border-transparent hover:border-primary shadow-card p-5 cursor-pointer transition-all">
+              <div className="w-12 h-12 rounded-[14px] flex items-center justify-center mb-4" style={{ backgroundColor: dot + '22' }}>
+                <BookOpen size={22} style={{ color: dot }} />
+              </div>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-lg font-extrabold text-ink leading-snug">{planner.name}</h3>
+                <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
+                  <button onClick={e => openEdit(e, planner)} aria-label="Редактировать"
+                    className="p-1.5 text-ink-3 hover:text-primary hover:bg-surface-soft rounded-lg transition-colors"><Pencil size={14} /></button>
+                  <button onClick={e => { e.stopPropagation(); onDeletePlanner(planner.id); }} aria-label="Удалить"
+                    className="p-1.5 text-ink-3 hover:text-danger hover:bg-danger-bg rounded-lg transition-colors"><Trash2 size={14} /></button>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+              <p className="text-sm text-ink-3 mt-1">Создан {new Date(planner.createdAt).toLocaleDateString('ru-RU')}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Создать ежедневник */}
+      <button onClick={() => setShowNewPlannerForm(true)}
+        className="w-full max-w-5xl mt-4 flex items-center justify-center gap-3 min-h-[88px] rounded-[20px] border-2 border-dashed border-[#BBD5C9] text-primary hover:bg-surface/50 transition-colors">
+        <span className="w-12 h-12 rounded-[14px] bg-nav-active flex items-center justify-center"><Plus size={24} className="text-accent" /></span>
+        <span className="text-lg font-bold">Создать ежедневник</span>
+      </button>
+
+      <div className="mt-8 text-sm text-ink-3">
+        Вы вошли как {user.displayName || user.email} · <button onClick={onSignOut} className="underline hover:text-ink">Выйти</button>
+      </div>
     </div>
   );
 };
@@ -480,6 +444,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [editingTags, setEditingTags] = useState([]);
   const [expandedNoteId, setExpandedNoteId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null); // { id, type: 'delete' | 'move' }
+  const [detailTask, setDetailTask] = useState(null); // { dateStr, id }
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [extraLines, setExtraLines] = useState(0);
@@ -1103,6 +1068,10 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                         </div>
                       ) : (
                         <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button onClick={() => { setDetailTask({ dateStr, id: task.id }); setView('details'); }} aria-label="Открыть сведения о задаче"
+                            className="w-10 h-10 rounded-xl bg-details-btn text-primary flex items-center justify-center mr-1 shrink-0">
+                            <Maximize2 size={16} />
+                          </button>
                           <button onClick={() => setExpandedNoteId(isNoteOpen ? null : task.id)} aria-label="Заметка и подзадачи"
                             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isNoteOpen ? 'bg-white text-ink' : 'text-ink-3 hover:bg-white/60'}`}>
                             <ChevronDown size={18} className={`transition-transform ${isNoteOpen ? 'rotate-180' : ''}`} />
@@ -1810,6 +1779,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
     // Незавершённые задачи месяца
     const unfinished = allMonthTasks.filter(t => !t.completed).sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+    // Выполненные задачи месяца
+    const monthDone = allMonthTasks.filter(t => t.completed).sort((a, b) => a.dateStr.localeCompare(b.dateStr));
 
     // Диапазон дат для переноса (следующий месяц)
     const nextMonthMin = `${month === 11 ? year + 1 : year}-${String(((month + 1) % 12) + 1).padStart(2, '0')}-01`;
@@ -1906,6 +1877,32 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                     <Check size={14} className="text-[#12805F] shrink-0" />
                     <span className="text-sm text-[#0B5D46] line-through decoration-[#9DB8AC]">{t.text}</span>
                     <span className="text-xs text-[#6B8078] ml-auto shrink-0">{fmtDate(t.deadline)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Выполнено за месяц */}
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="px-5 sm:px-8 py-4 border-b border-[#DDEAE4] flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[#0B5D46] flex items-center gap-2"><Check size={16} className="text-[#12805F]" /> Выполнено за месяц</h2>
+            <span className="text-sm text-[#6B8078]">{monthDone.length}</span>
+          </div>
+          <div className="p-3 sm:p-5">
+            {monthDone.length === 0 ? (
+              <p className="text-sm text-[#9DB8AC] px-2 py-3">В этом месяце пока нет выполненных задач</p>
+            ) : (
+              <div className="space-y-1">
+                {monthDone.map(t => (
+                  <div key={t.id + t.dateStr} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#F1F8F4]">
+                    <Check size={14} className="text-[#12805F] shrink-0" />
+                    <span className="text-sm text-[#0B5D46] line-through decoration-[#9DB8AC] flex-grow min-w-0 truncate">{t.text}</span>
+                    {(t.tags || []).slice(0, 2).map(tag => (
+                      <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-[#DDF3E7] text-[#1E7F4F] rounded-full shrink-0 hidden sm:inline">#{tag}</span>
+                    ))}
+                    <span className="text-xs text-[#6B8078] ml-auto shrink-0">{fmtDate(t.dateStr)}</span>
                   </div>
                 ))}
               </div>
@@ -2034,6 +2031,141 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                     e.target.value = '';
                   }
                 }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ===== Вспомогательные данные для нового каркаса =====
+  // --- СВЕДЕНИЯ О ЗАДАЧЕ ---
+  const renderTaskDetails = () => {
+    const back = (d) => { if (d) { setCurrentDate(d); setDayStage('day'); } setView('day'); setDetailTask(null); };
+    if (!detailTask) { back(); return null; }
+    const { dateStr, id } = detailTask;
+    const task = (tasks[dateStr] || []).find(t => t.id === id);
+    if (!task) {
+      return (
+        <div className="bg-surface rounded-[24px] shadow-card p-8 text-center text-ink-3">
+          Задача не найдена. <button onClick={() => back()} className="text-primary font-semibold underline">Назад к дню</button>
+        </div>
+      );
+    }
+    const d = new Date(dateStr + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    const weekdayLabel = d.toLocaleDateString('ru-RU', { weekday: 'long' });
+    const isOverdue = !task.completed && dateStr < todayStr;
+    const important = (task.tags || []).includes('важное') || isOverdue;
+    const subtasks = task.subtasks || [];
+    const subDone = subtasks.filter(s => s.done).length;
+    const upd = (fields) => updateTask(dateStr, id, fields);
+
+    return (
+      <div className="bg-surface rounded-[24px] shadow-card p-5 sm:p-8 flex flex-col">
+        {/* Верхняя строка */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <button onClick={() => back(d)} className="flex items-center gap-2 min-h-[44px] pl-2 pr-3 text-sm font-semibold text-ink-2 hover:text-ink">
+            <ChevronLeft size={18} /> Назад к дню
+          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => { moveToNextDay(task, dateStr); back(); }}
+              className="flex items-center gap-2 min-h-[44px] px-4 border border-line bg-surface rounded-[14px] text-sm font-semibold text-ink hover:bg-surface-soft">
+              <ArrowRight size={17} className="text-accent" /> На завтра
+            </button>
+            <button onClick={() => openInCalendar(task, dateStr)}
+              className="flex items-center gap-2 min-h-[44px] px-4 border border-line bg-surface rounded-[14px] text-sm font-semibold text-ink hover:bg-surface-soft">
+              <Calendar size={17} className="text-accent" /> <span className="hidden sm:inline">В Google Календарь</span><span className="sm:hidden">Календарь</span>
+            </button>
+            <button onClick={() => { deleteTask(dateStr, id); back(); }}
+              className="flex items-center gap-2 min-h-[44px] px-4 border border-danger-btn-border bg-danger-btn rounded-[14px] text-sm font-semibold text-danger">
+              <Trash2 size={17} /> Удалить
+            </button>
+          </div>
+        </div>
+
+        {/* Заголовок */}
+        <div className="flex items-start gap-4 mt-5">
+          <label className="shrink-0 mt-2 cursor-pointer">
+            <input type="checkbox" checked={task.completed} onChange={() => upd({ completed: !task.completed })} className="peer sr-only" />
+            <span className={`w-7 h-7 rounded-[9px] border-2 flex items-center justify-center ${task.completed ? 'bg-accent border-accent' : 'bg-white border-cb-border'}`}>
+              {task.completed && <Check size={18} className="text-white" strokeWidth={3} />}
+            </span>
+          </label>
+          <div className="flex-1 min-w-0">
+            <input value={task.text} onChange={e => upd({ text: e.target.value })}
+              className={`w-full bg-transparent text-2xl sm:text-[34px] font-extrabold leading-tight tracking-[-0.8px] focus:outline-none ${task.completed ? 'line-through text-done-text' : 'text-ink'}`} />
+            <div className="flex items-center gap-2.5 mt-2.5 flex-wrap text-[13px] text-ink-3">
+              <span className="flex items-center gap-1.5"><Calendar size={15} /> {dateLabel}</span>
+              {important && <span className="text-xs font-semibold px-3 py-0.5 rounded-full bg-danger-chip text-danger">Важное</span>}
+              {(task.tags || []).filter(t => t !== 'важное').map(tag => (
+                <span key={tag} className="text-xs font-semibold px-3 py-0.5 rounded-full bg-tag-green-bg text-tag-green-text">#{tag}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Колонки */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-7 mt-6">
+          {/* Левая: заметка + подзадачи */}
+          <div className="flex-1 min-w-0">
+            <div className="text-[15px] font-extrabold mb-2.5">Заметка к задаче</div>
+            <textarea value={task.notes || ''} onChange={e => upd({ notes: e.target.value })}
+              placeholder="Добавить заметку к задаче…" rows={4}
+              className="w-full min-h-[120px] box-border p-4 rounded-[18px] bg-surface-soft text-[15px] leading-6 text-ink placeholder-ink-3 focus:outline-none resize-y" />
+
+            <div className="flex items-baseline justify-between mt-6 mb-2.5">
+              <span className="text-[15px] font-extrabold">Подзадачи</span>
+              <span className="text-[13px] text-ink-3">{subDone} из {subtasks.length}</span>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {subtasks.map(st => (
+                <div key={st.id} className="flex items-center gap-3.5 min-h-[52px] px-4 rounded-[16px] border border-divider">
+                  <input type="checkbox" checked={st.done}
+                    onChange={() => upd({ subtasks: subtasks.map(s => s.id === st.id ? { ...s, done: !s.done } : s) })}
+                    className="w-[22px] h-[22px] accent-accent cursor-pointer shrink-0" />
+                  <input value={st.text}
+                    onChange={e => upd({ subtasks: subtasks.map(s => s.id === st.id ? { ...s, text: e.target.value } : s) })}
+                    className={`flex-1 bg-transparent text-[15px] focus:outline-none min-w-0 ${st.done ? 'line-through text-ink-3' : 'text-ink font-medium'}`} />
+                  <button onClick={() => upd({ subtasks: subtasks.filter(s => s.id !== st.id) })} aria-label="Удалить подзадачу"
+                    className="w-10 h-10 -mr-2 text-ink-3 hover:text-danger flex items-center justify-center shrink-0"><Trash2 size={17} /></button>
+                </div>
+              ))}
+              <div className="flex items-center gap-3 min-h-[52px] px-4 rounded-[16px] border-[1.5px] border-dashed border-[#BBD5C9] text-accent">
+                <Plus size={18} className="shrink-0" />
+                <input placeholder="Добавить подзадачу…"
+                  onKeyDown={e => { if (e.key === 'Enter' && e.target.value.trim()) { upd({ subtasks: [...subtasks, { id: generateId(), text: e.target.value.trim(), done: false }] }); e.target.value = ''; } }}
+                  className="flex-1 bg-transparent text-[15px] font-semibold placeholder-accent focus:outline-none" />
+              </div>
+            </div>
+          </div>
+
+          {/* Правая: сведения */}
+          <div className="w-full lg:w-[300px] shrink-0 box-border p-5 rounded-[20px] bg-surface-soft self-start">
+            <div className="text-[15px] font-extrabold mb-3.5">Сведения</div>
+            <div className="flex flex-col gap-3.5 text-sm">
+              <div>
+                <div className="text-xs text-ink-3 mb-1">Ежедневник</div>
+                <div className="flex items-center gap-2 font-semibold"><span className="w-[9px] h-[9px] rounded-full" style={{ backgroundColor: currentColorInfo?.dot || '#12805F' }} />{plannerName}</div>
+              </div>
+              <div>
+                <div className="text-xs text-ink-3 mb-1">Дата</div>
+                <div className="font-semibold capitalize">{weekdayLabel}, {dateLabel}</div>
+              </div>
+              <div>
+                <div className="text-xs text-ink-3 mb-1.5">Теги</div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {important && <span className="text-xs font-semibold px-3 py-0.5 rounded-full bg-danger-chip text-danger">Важное</span>}
+                  {(task.tags || []).filter(t => t !== 'важное').map(tag => (
+                    <span key={tag} className="text-xs font-semibold px-3 py-0.5 rounded-full bg-tag-green-bg text-tag-green-text">#{tag}</span>
+                  ))}
+                  {(task.tags || []).length === 0 && !important && <span className="text-xs text-ink-3">—</span>}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-ink-3 mb-1">Статус</div>
+                <div className="font-semibold">{task.completed ? 'Выполнена' : 'Не выполнена'}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -2240,6 +2372,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       {view === 'notes' && renderNotesView()}
       {view === 'overdue' && renderOverdueView()}
       {view === 'summary' && renderSummaryView()}
+      {view === 'details' && renderTaskDetails()}
     </>
   );
 
