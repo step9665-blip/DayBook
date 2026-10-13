@@ -710,6 +710,22 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     setExtraLines(0);
   };
 
+  // Горячие клавиши ← / → для переключения дней
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!['day', 'week', 'weekend', 'month'].includes(view)) return;
+      if (showCalendar || showRecurringModal) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      if (e.key === 'ArrowLeft') { e.preventDefault(); navigateRef.current(-1); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); navigateRef.current(1); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [view, showCalendar, showRecurringModal]);
+
   // Collect all tags from all loaded tasks
   const allTags = [...new Set(Object.values(tasks).flat().flatMap(t => t.tags || []))];
 
