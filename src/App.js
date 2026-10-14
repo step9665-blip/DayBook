@@ -2460,6 +2460,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                 {n.dropdown && <ViewDropdownMenu />}
               </div>
             ))}
+            <button onClick={() => setShowLog(v => !v)} aria-label="Журнал действий"
+              className={`relative w-12 h-12 mb-1.5 rounded-[14px] flex items-center justify-center ${showLog ? 'bg-nav-active text-primary' : 'text-ink-2 hover:bg-surface-soft'}`}>
+              <History size={21} />
+              {activityLog.length > 0 && <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent" />}
+            </button>
             <div className="flex-1" />
             <button onClick={onSignOut} aria-label={`Профиль: ${user.displayName || user.email}, выйти`}
               className="w-[38px] h-[38px] rounded-full bg-primary text-white flex items-center justify-center font-bold">
@@ -2488,6 +2493,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                 {n.dropdown && <ViewDropdownMenu />}
               </div>
             ))}
+            <button onClick={() => setShowLog(v => !v)}
+              className={`w-full flex items-center gap-3 min-h-[46px] px-3.5 rounded-[14px] text-[15px] mb-1 ${showLog ? 'bg-nav-active text-primary font-bold' : 'text-ink-2 font-medium hover:bg-surface-soft'}`}>
+              <History size={20} />
+              <span className="flex-1 text-left">Журнал</span>
+              {activityLog.length > 0 && <span className="min-w-[22px] h-[22px] px-1.5 rounded-[11px] bg-nav-active text-primary text-xs font-bold flex items-center justify-center">{activityLog.length}</span>}
+            </button>
             <div className="flex-1" />
             <div className="flex items-center gap-2.5 px-2 pt-3 border-t border-divider">
               <span className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold">{(user.displayName || user.email || 'A').charAt(0).toUpperCase()}</span>
@@ -2521,12 +2532,6 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                 placeholder="Поиск по дневнику…"
                 className="flex-1 bg-transparent focus:outline-none text-ink placeholder-ink-3" />
             </div>
-            <span className="flex-1" />
-            <button onClick={() => setShowLog(v => !v)} aria-label="Журнал действий"
-              className="relative w-11 h-11 rounded-[22px] bg-surface shadow-soft flex items-center justify-center text-ink-2 hover:text-ink">
-              <History size={19} />
-              {activityLog.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
-            </button>
           </div>
 
           {showBanner && <DayBanner />}
@@ -2559,7 +2564,7 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       {/* ===== Журнал действий ===== */}
       {showLog && (
         <div className="fixed inset-0 z-[60]" onClick={() => setShowLog(false)}>
-          <div className="absolute top-16 right-3 sm:right-6 w-[320px] max-w-[92vw] max-h-[75vh] overflow-y-auto bg-surface rounded-2xl shadow-cal border border-line" onClick={e => e.stopPropagation()}>
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[340px] max-w-[92vw] max-h-[75vh] overflow-y-auto bg-surface rounded-2xl shadow-cal border border-line" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-line sticky top-0 bg-surface z-10">
               <h3 className="text-sm font-bold text-ink flex items-center gap-2"><History size={16} /> Журнал действий</h3>
               <button onClick={() => setShowLog(false)} className="p-1 text-ink-3 hover:text-ink"><X size={16} /></button>
