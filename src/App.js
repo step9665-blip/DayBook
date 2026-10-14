@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft, Undo2, Redo2, Clock, Star, Repeat, Search, ChevronsLeft, ChevronsRight, LogOut, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, Plus, BookOpen, Pencil, X, ChevronDown, Calendar, Mic, ArrowRight, BarChart3, Target, Lightbulb, FileText, Bold, Italic, Underline, List, ListOrdered, ListChecks, Heading, Type, ArrowLeft, Undo2, Redo2, Clock, Star, Repeat, Search, ChevronsLeft, ChevronsRight, LogOut, Maximize2, History } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, setDoc, getDocs, getDoc } from 'firebase/firestore';
@@ -445,6 +445,18 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
   const [expandedNoteId, setExpandedNoteId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null); // { id, type: 'delete' | 'move' }
   const [detailTask, setDetailTask] = useState(null); // { dateStr, id }
+  const [activityLog, setActivityLog] = useState([]); // [{ id, ts, label, undo }]
+  const [showLog, setShowLog] = useState(false);
+  const pushLog = (label, undo) => {
+    setActivityLog(prev => [{ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: Date.now(), label, undo }, ...prev].slice(0, 30));
+  };
+  const undoLogEntry = (entryId) => {
+    setActivityLog(prev => {
+      const entry = prev.find(e => e.id === entryId);
+      if (entry && entry.undo) { try { entry.undo(); } catch (err) { console.error(err); } }
+      return prev.filter(e => e.id !== entryId);
+    });
+  };
   const [selectedTags, setSelectedTags] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [extraLines, setExtraLines] = useState(0);
@@ -639,20 +651,43 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     if (!text.trim()) return;
     const newTask = { id: generateId(), text: text.trim(), tags: [], notes: '', completed: false, createdAt: new Date().toISOString() };
     setTasks({ ...tasks, [dateStr]: [...(tasks[dateStr] || []), newTask] });
+    pushLog(`Добавлена задача: «${newTask.text}»`, () => {
+      setTasks(cur => ({ ...cur, [dateStr]: (cur[dateStr] || []).filter(t => t.id !== newTask.id) }));
+    });
   };
 
   const updateTask = (dateStr, id, updates) => {
     const dateTasks = [...(tasks[dateStr] || [])];
     const index = dateTasks.findIndex(t => t.id === id);
-    if (index !== -1) { dateTasks[index] = { ...dateTasks[index], ...updates }; setTasks({ ...tasks, [dateStr]: dateTasks }); }
+    if (index !== -1) {
+      const prevTask = dateTasks[index];
+      dateTasks[index] = { ...prevTask, ...updates };
+      setTasks({ ...tasks, [dateStr]: dateTasks });
+      if ('completed' in updates && updates.completed !== prevTask.completed) {
+        const was = prevTask.completed;
+        pushLog(`${updates.completed ? 'Выполнена' : 'Снята отметка'}: «${prevTask.text}»`, () => {
+          setTasks(cur => ({ ...cur, [dateStr]: (cur[dateStr] || []).map(t => t.id === id ? { ...t, completed: was } : t) }));
+        });
+      }
+    }
   };
 
   const deleteTask = (dateStr, id) => {
+    const removed = (tasks[dateStr] || []).find(t => t.id === id);
+    const removedIndex = (tasks[dateStr] || []).findIndex(t => t.id === id);
     const dateTasks = (tasks[dateStr] || []).filter(t => t.id !== id);
-    const newTasks = { ...tasks };
-    if (dateTasks.length === 0) delete newTasks[dateStr]; else newTasks[dateStr] = dateTasks;
-    setTasks(newTasks);
+    setTasks({ ...tasks, [dateStr]: dateTasks });
     if (expandedNoteId === id) setExpandedNoteId(null);
+    if (removed) {
+      pushLog(`Удалена задача: «${removed.text}»`, () => {
+        setTasks(cur => {
+          const arr = [...(cur[dateStr] || [])];
+          const at = Math.min(removedIndex < 0 ? arr.length : removedIndex, arr.length);
+          arr.splice(at, 0, removed);
+          return { ...cur, [dateStr]: arr };
+        });
+      });
+    }
   };
 
   const startEdit = (task) => { setEditingId(task.id); setEditingText(task.text); setEditingTags(task.tags || []); };
@@ -770,15 +805,24 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       [fromDateStr]: (prev[fromDateStr] || []).filter(t => t.id !== task.id),
       [toDateStr]: [...(prev[toDateStr] || []), { ...task }],
     }));
+    const dLabel = new Date(toDateStr + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    pushLog(`Перенесена на ${dLabel}: «${task.text}»`, () => {
+      setTasks(cur => ({ ...cur, [toDateStr]: (cur[toDateStr] || []).filter(t => t.id !== task.id), [fromDateStr]: [...(cur[fromDateStr] || []), { ...task }] }));
+    });
   };
 
   // Перенос задачи в «Важные задачи»
   const moveTaskToImportant = (fromDateStr, task) => {
-    saveImportantTasks([...importantTasks, {
+    const newImp = {
       id: generateId(), text: task.text, tags: task.tags || [], notes: task.notes || '',
       deadline: '', link: '', completed: false, createdAt: new Date().toISOString(),
-    }]);
+    };
+    saveImportantTasks([...importantTasks, newImp]);
     setTasks(prev => ({ ...prev, [fromDateStr]: (prev[fromDateStr] || []).filter(t => t.id !== task.id) }));
+    pushLog(`Перенесена в «Важные»: «${task.text}»`, () => {
+      saveImportantTasks(importantTasks.filter(t => t.id !== newImp.id));
+      setTasks(cur => ({ ...cur, [fromDateStr]: [...(cur[fromDateStr] || []), { ...task }] }));
+    });
   };
 
   // Создать «Важную задачу» из текста (для целей)
@@ -807,6 +851,9 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       [dateStr]: (prev[dateStr] || []).filter(t => t.id !== task.id),
       [nextDate]: [...(prev[nextDate] || []), { ...task }],
     }));
+    pushLog(`Перенесена на следующий день: «${task.text}»`, () => {
+      setTasks(cur => ({ ...cur, [nextDate]: (cur[nextDate] || []).filter(t => t.id !== task.id), [dateStr]: [...(cur[dateStr] || []), { ...task }] }));
+    });
   };
 
   const openInCalendar = (task, dateStr) => {
@@ -2456,6 +2503,11 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           <div className="lg:hidden flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-extrabold text-lg text-primary"><Leaf size={24} /> DayBook</div>
             <div className="flex items-center gap-2">
+              <button onClick={() => setShowLog(v => !v)} aria-label="Журнал действий"
+                className="relative w-9 h-9 rounded-full bg-surface shadow-soft flex items-center justify-center text-ink-2">
+                <History size={18} />
+                {activityLog.length > 0 && <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent" />}
+              </button>
               <PlannerPicker />
               <button onClick={onSignOut} className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">{(user.displayName || user.email || 'A').charAt(0).toUpperCase()}</button>
             </div>
@@ -2469,6 +2521,12 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
                 placeholder="Поиск по дневнику…"
                 className="flex-1 bg-transparent focus:outline-none text-ink placeholder-ink-3" />
             </div>
+            <span className="flex-1" />
+            <button onClick={() => setShowLog(v => !v)} aria-label="Журнал действий"
+              className="relative w-11 h-11 rounded-[22px] bg-surface shadow-soft flex items-center justify-center text-ink-2 hover:text-ink">
+              <History size={19} />
+              {activityLog.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent" />}
+            </button>
           </div>
 
           {showBanner && <DayBanner />}
@@ -2497,6 +2555,36 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
           </div>
         ))}
       </nav>
+
+      {/* ===== Журнал действий ===== */}
+      {showLog && (
+        <div className="fixed inset-0 z-[60]" onClick={() => setShowLog(false)}>
+          <div className="absolute top-16 right-3 sm:right-6 w-[320px] max-w-[92vw] max-h-[75vh] overflow-y-auto bg-surface rounded-2xl shadow-cal border border-line" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-line sticky top-0 bg-surface z-10">
+              <h3 className="text-sm font-bold text-ink flex items-center gap-2"><History size={16} /> Журнал действий</h3>
+              <button onClick={() => setShowLog(false)} className="p-1 text-ink-3 hover:text-ink"><X size={16} /></button>
+            </div>
+            {activityLog.length === 0 ? (
+              <p className="text-sm text-ink-3 px-4 py-8 text-center">Пока нет действий в этой сессии</p>
+            ) : (
+              <div className="p-2">
+                {activityLog.map(e => (
+                  <div key={e.id} className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-surface-soft">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-ink truncate">{e.label}</div>
+                      <div className="text-[11px] text-ink-3">{new Date(e.ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                    <button onClick={() => undoLogEntry(e.id)}
+                      className="shrink-0 flex items-center gap-1 text-xs font-semibold text-primary px-2.5 py-1.5 rounded-lg hover:bg-nav-active">
+                      <Undo2 size={13} /> Отменить
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
