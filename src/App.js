@@ -1423,24 +1423,13 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
     };
 
     return (
-      <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
-        <div className="px-4 sm:px-8 py-4 flex justify-center sm:justify-end items-center border-b border-[#DDEAE4]">
-          <div className="flex items-center gap-2">
-            <button onClick={() => navigate(-1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
-              <ChevronLeft size={18} />
-            </button>
-            <div className="text-center min-w-[130px]">
-              <p className="text-base font-semibold text-[#0B5D46]">Выходные</p>
-              <p className="text-xs text-[#6B8078]">{weekendLabel}</p>
-            </div>
-            <button onClick={() => navigate(1)} className="p-1 text-[#6B8078] hover:text-[#0B5D46] hover:bg-[#F1F8F4] rounded-full transition-colors">
-              <ChevronRight size={18} />
-            </button>
+      <div>
+        <SlotBanner title="Выходные" sub={weekendLabel} />
+        <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
+          <div className="flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-[#DDEAE4]">
+            {renderDaySection(sat)}
+            {renderDaySection(sun)}
           </div>
-        </div>
-        <div className="flex flex-col md:flex-row md:divide-x divide-y md:divide-y-0 divide-[#DDEAE4]">
-          {renderDaySection(sat)}
-          {renderDaySection(sun)}
         </div>
       </div>
     );
@@ -1466,22 +1455,8 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
 
     return (
       <div>
+        <SlotBanner title="Итоги недели" sub={label} />
         <div className="bg-white rounded-3xl border border-[#DDEAE4] shadow-[0_4px_24px_rgba(16,71,54,0.06)] overflow-hidden">
-          <div className="px-5 sm:px-8 py-4 bg-[#0B5D46] flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-white flex items-center gap-2"><BarChart3 size={16} /> Итоги недели</h2>
-              <p className="text-xs text-[#BFE5D6] mt-0.5">Все задачи недели — выполненные и невыполненные</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button onClick={() => navigate(-1)} className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                <ChevronLeft size={18} />
-              </button>
-              <span className="text-xs text-white/90 min-w-[110px] text-center">{label}</span>
-              <button onClick={() => navigate(1)} className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
           {/* Статистика */}
           <div className="px-5 sm:px-8 py-4 border-b border-[#DDEAE4]">
             <div className="grid grid-cols-3 gap-3 mb-3">
@@ -2419,6 +2394,28 @@ const PlannerView = ({ planner, plannerId, planners, currentPlannerId, onSelectP
       <button onClick={() => { newTaskInputRef.current && newTaskInputRef.current.focus(); }}
         className="relative flex items-center gap-2 min-h-[44px] px-4 sm:px-5 rounded-[22px] bg-white text-primary text-sm font-bold">
         <Plus size={18} /> <span className="hidden sm:inline">Добавить</span>
+      </button>
+    </div>
+  );
+
+  // Баннер для экранов «Выходные» и «Итоги недели» (как в будни)
+  const SlotBanner = ({ title, sub }) => (
+    <div className="relative z-[5] h-[88px] shrink-0 rounded-[24px] text-white flex items-center px-5 sm:px-7 shadow-banner overflow-hidden mb-3.5"
+      style={{ background: 'linear-gradient(120deg, #0A4D3A, #0B6A4F 55%, #14876A)' }}>
+      <div className="absolute inset-0 rounded-[24px] overflow-hidden pointer-events-none">
+        <svg width="100%" height="100%" viewBox="0 0 900 88" preserveAspectRatio="xMaxYMid slice"><circle cx="760" cy="10" r="90" fill="#fff" fillOpacity="0.06" /><circle cx="860" cy="88" r="70" fill="#fff" fillOpacity="0.06" /></svg>
+      </div>
+      <button aria-label="Назад" onClick={() => navigate(-1)}
+        className="w-9 h-9 mr-2 sm:mr-3 rounded-full flex items-center justify-center shrink-0 hover:bg-white/15 transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
+        <ChevronLeft size={20} className="text-white" />
+      </button>
+      <div className="relative">
+        <span className="absolute -top-5 left-0 text-[13px] sm:text-sm font-medium whitespace-nowrap" style={{ color: '#BFE5D6' }}>{sub}</span>
+        <span className="text-[22px] sm:text-[30px] font-bold leading-none tracking-[-0.5px]">{title}</span>
+      </div>
+      <button aria-label="Вперёд" onClick={() => navigate(1)}
+        className="w-9 h-9 ml-2 sm:ml-3 rounded-full flex items-center justify-center shrink-0 hover:bg-white/15 transition-colors" style={{ background: 'rgba(255,255,255,0.1)' }}>
+        <ChevronRight size={20} className="text-white" />
       </button>
     </div>
   );
